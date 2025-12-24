@@ -95,6 +95,7 @@ footer{text-align:center;margin-top:14px;font-size:12px;color:var(--muted)}
 <script>
 (() => {
   // Prefer Raven UI endpoint (no key), then protected one.
+  // Keep minimal fallbacks, AND send only schemas.ComputeRequest fields.
   const API_CANDIDATES = [
     "/ui/compute",
     "/api/compute"
@@ -118,24 +119,22 @@ footer{text-align:center;margin-top:14px;font-size:12px;color:var(--muted)}
 
   function normalizeInput(s){
     return (s ?? "")
-      .replace(/\\r\\n/g, "\\n")
-      .replace(/\\u2192/g, "->") // →
+      .replace(/\r\n/g, "\n")
+      .replace(/\u2192/g, "->") // →
       .trim();
   }
 
-  function sympyNormalize(expr){ return (expr ?? "").replace(/\\^/g, "**"); }
-  function normalizeVariables(expr){ return (expr ?? "").replace(/\\bX\\b/g, "x"); }
+  function sympyNormalize(expr){ return (expr ?? "").replace(/\^/g, "**"); }
+  function normalizeVariables(expr){ return (expr ?? "").replace(/\bX\b/g, "x"); }
 
-  function parseLimit(raw){
-    // Accept: "f(x), x->0", "f(x), x->0+", "f(x), x->0-"
-    const parts = (raw ?? "").split(",");
+  function parseLimitStudent(raw){
+    // Accept: "f(x), x->0" or "f(x), x->0+" or "f(x), x->0-"
+    const parts = String(raw ?? "").split(",");
     if (parts.length < 2) return null;
-
     const f = parts[0].trim();
     const spec = parts.slice(1).join(",").trim().replace(/→/g, "->").replace(/⇒/g, "->");
-    const m = spec.match(/^([a-zA-Z]\\w*)\\s*-\\>\\s*([^\\s]+)\\s*([+-])?$/);
+    const m = spec.match(/^([a-zA-Z]\w*)\s*-\>\s*([^\s]+)\s*([+-])?$/);
     if (!m) return null;
-
     return { f, wrt: m[1], to: m[2], dir: m[3] || "" };
   }
 
@@ -155,32 +154,40 @@ footer{text-align:center;margin-top:14px;font-size:12px;color:var(--muted)}
 
   function extractResult(data, rawText){
     if (!data) return rawText || "(empty response)";
-    if (data.detail && !data.result) return "ERROR:\\n" + String(data.detail);
+    if (data.detail && !data.result) return "ERROR:\n" + String(data.detail);
     if (data.result !== undefined && String(data.result).trim() !== "") return String(data.result);
-    if (data.latex && String(data.latex).trim() !== "" && String(data.latex) !== "\\\\left[ \\\\right]") return String(data.latex);
+    if (data.latex && String(data.latex).trim() !== "" && String(data.latex) !== "\\left[ \\right]") return String(data.latex);
     return JSON.stringify(data, null, 2);
   }
 
   function buildPayload(rawExpression, operation){
-    // IMPORTANT: match schemas.py (ComputeRequest) fields:
-    // operation, expression, variables, wrt, n, a, b, limit_to
+    // IMPORTANT: send ONLY fields defined in schemas.ComputeRequest
     let expr = sympyNormalize(normalizeVariables(rawExpression));
 
-    const payload = {
-      operation,
-      expression: expr
-    };
+    const payload = { operation, expression: expr };
 
+    // Fix your current failure:
+    // Backend expects either:
+    //  - limit_to provided, OR
+    //  - expression in student format "f(x), x->0" (parsed server-side)
+    //
+    // To make this robust, we ALSO parse client-side and send limit_to/wrt/limit_dir.
     if (operation === "limit") {
-      // Make limits work even if backend is older: we explicitly populate wrt + limit_to.
-      const lim = parseLimit(expr);
-      if (lim) {
-        payload.expression = sympyNormalize(normalizeVariables(lim.f));
-        payload.wrt = normalizeVariables(lim.wrt);
+      const parsed = parseLimitStudent(expr);
+      if (parsed) {
+        // If input ends with 0+ / 0- inside "to", split that too
+        let toRaw = String(parsed.to).trim();
+        let dir = String(parsed.dir || "").trim();
 
-        // Encode one-sided limits into limit_to (schemas supports limit_to only).
-        // sympy_engine.limit() already understands "0+" / "0-".
-        payload.limit_to = sympyNormalize(lim.to) + (lim.dir || "");
+        if ((toRaw.endsWith("+") || toRaw.endsWith("-")) && dir === "") {
+          dir = toRaw.slice(-1);
+          toRaw = toRaw.slice(0, -1).trim();
+        }
+
+        payload.expression = parsed.f;                 // just f(x)
+        payload.wrt = parsed.wrt;                      // variable
+        payload.limit_to = sympyNormalize(toRaw);      // point
+        payload.limit_dir = dir;                       // "+" | "-" | ""
       }
     }
 
@@ -192,7 +199,7 @@ footer{text-align:center;margin-top:14px;font-size:12px;color:var(--muted)}
     const operation = $op.value;
 
     if (!raw) {
-      $result.textContent = "Type an expression first.\\n\\nHit Example ✨ to load one.";
+      $result.textContent = "Type an expression first.\n\nHit Example ✨ to load one.";
       return;
     }
 
@@ -207,20 +214,20 @@ footer{text-align:center;margin-top:14px;font-size:12px;color:var(--muted)}
         try {
           const { res, text, data } = await postJson(url, payload);
           if (!res.ok) {
-            lastErr = `Tried ${url} → HTTP ${res.status}\\n\\n${text || "(empty)"}`;
+            lastErr = `Tried ${url} → HTTP ${res.status}\n\n${text || "(empty)"}`;
             continue;
           }
           $result.textContent = extractResult(data, text);
           return;
         } catch (e) {
-          lastErr = `Tried ${url} → FETCH ERROR\\n\\n${String(e)}`;
+          lastErr = `Tried ${url} → FETCH ERROR\n\n${String(e)}`;
         }
       }
 
       $result.textContent =
-        "Could not compute a result (backend sleeping, rate limited, or route mismatch).\\n\\n" +
-        "Tried:\\n" + API_CANDIDATES.map(x => "  - " + x).join("\\n") +
-        "\\n\\nLast error:\\n" + (lastErr || "(none)");
+        "Could not compute a result (backend sleeping, rate limited, or route mismatch).\n\n" +
+        "Tried:\n" + API_CANDIDATES.map(x => "  - " + x).join("\n") +
+        "\n\nLast error:\n" + (lastErr || "(none)");
     } finally {
       setBusy(false);
     }
@@ -374,4 +381,3 @@ footer{text-align:center;margin-top:14px;font-size:12px;color:var(--muted)}
 
 </body>
 </html>
-
