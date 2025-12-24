@@ -1,0 +1,21 @@
+@"
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+
+# Cloudflare / secrets
+.env
+*.pem
+*.key
+*.json
+
+# Editor / OS
+.vscode/
+.DS_Store
+"@ | Out-File -Encoding utf8 .gitignore

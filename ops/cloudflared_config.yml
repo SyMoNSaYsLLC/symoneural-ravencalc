@@ -1,0 +1,7 @@
+tunnel: symoneural-main
+credentials-file: C:\Users\Garrett\.cloudflared\creds\symoneural-main.json
+
+ingress:
+  - hostname: www.symoneural.com
+    service: http://127.0.0.1:8000
+  - service: http_status:404

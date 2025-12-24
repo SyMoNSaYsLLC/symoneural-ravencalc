@@ -1,0 +1,4 @@
+# Optional: If you ever want a local reverse proxy in front of FastAPI
+# :8080 {
+#   reverse_proxy 127.0.0.1:8000
+# }
