@@ -5,168 +5,39 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>SyMoNeuRaL • RavenCalc 🎄</title>
 
+<meta http-equiv="Cache-Control" content="no-store, max-age=0" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+
 <style>
-
-/* ============================================================
-   FIX: Dropdown / Select visibility + arrow
-   ============================================================ */
-select,
-select option,
-select optgroup {
-  background-color: #0f151b !important;
-  color: #eaf2ff !important;
-}
-
-.select-wrap {
-  position: relative;
-}
-
-.select-wrap::after {
-  content: "▾";
-  position: absolute;
-  right: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  pointer-events: none;
-  color: rgba(255,255,255,0.65);
-  font-size: 14px;
-}
-
-select {
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  padding-right: 34px;
-  border: 1px solid rgba(255,255,255,0.10);
-}
-
-select:focus {
-  outline: 2px solid rgba(120, 200, 255, 0.35);
-  outline-offset: 2px;
-}
-
-/* ============================================================
-   THEME
-   ============================================================ */
-:root{
-  --card: rgba(255,255,255,0.08);
-  --card2: rgba(255,255,255,0.06);
-  --text: rgba(255,255,255,0.92);
-  --muted: rgba(255,255,255,0.65);
-  --border: rgba(255,255,255,0.14);
-  --shadow: 0 10px 35px rgba(0,0,0,0.45);
-  --radius: 18px;
-  --ok: #22c55e;
-  --warn: #f59e0b;
-  --bad: #ef4444;
-}
-
-body{
-  margin:0;
-  font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
-  background:
-    radial-gradient(1000px 600px at 15% 10%, rgba(16,185,129,.18), transparent 60%),
-    radial-gradient(900px 500px at 85% 15%, rgba(245,158,11,.14), transparent 55%),
-    radial-gradient(1100px 700px at 50% 95%, rgba(59,130,246,.12), transparent 60%),
-    linear-gradient(180deg,#061014,#03070a);
-  color:var(--text);
-  min-height:100vh;
-}
-
-.snow{
-  position:fixed;
-  inset:0;
-  pointer-events:none;
-  opacity:.45;
-  background:
-    radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,.9), transparent 60%),
-    radial-gradient(1.5px 1.5px at 120px 140px, rgba(255,255,255,.7), transparent 60%),
-    radial-gradient(2px 2px at 260px 90px, rgba(255,255,255,.8), transparent 60%),
-    radial-gradient(1.5px 1.5px at 400px 180px, rgba(255,255,255,.6), transparent 60%),
-    radial-gradient(2px 2px at 520px 60px, rgba(255,255,255,.9), transparent 60%);
-  background-size:600px 220px;
-  animation:drift 10s linear infinite;
-}
-@keyframes drift{
-  from{transform:translateY(-30px)}
-  to{transform:translateY(30px)}
-}
-
+select,select option,select optgroup{background-color:#0f151b!important;color:#eaf2ff!important}
+.select-wrap{position:relative}
+.select-wrap::after{content:"▾";position:absolute;right:14px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(255,255,255,.65);font-size:14px}
+select{-webkit-appearance:none;-moz-appearance:none;appearance:none;padding-right:34px;border:1px solid rgba(255,255,255,.10)}
+select:focus{outline:2px solid rgba(120,200,255,.35);outline-offset:2px}
+:root{--card:rgba(255,255,255,.08);--card2:rgba(255,255,255,.06);--text:rgba(255,255,255,.92);--muted:rgba(255,255,255,.65);--border:rgba(255,255,255,.14);--shadow:0 10px 35px rgba(0,0,0,.45);--radius:18px;--ok:#22c55e;--warn:#f59e0b;--bad:#ef4444}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:radial-gradient(1000px 600px at 15% 10%, rgba(16,185,129,.18), transparent 60%),radial-gradient(900px 500px at 85% 15%, rgba(245,158,11,.14), transparent 55%),radial-gradient(1100px 700px at 50% 95%, rgba(59,130,246,.12), transparent 60%),linear-gradient(180deg,#061014,#03070a);color:var(--text);min-height:100vh}
+.snow{position:fixed;inset:0;pointer-events:none;opacity:.45;background:radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,.9), transparent 60%),radial-gradient(1.5px 1.5px at 120px 140px, rgba(255,255,255,.7), transparent 60%),radial-gradient(2px 2px at 260px 90px, rgba(255,255,255,.8), transparent 60%),radial-gradient(1.5px 1.5px at 400px 180px, rgba(255,255,255,.6), transparent 60%),radial-gradient(2px 2px at 520px 60px, rgba(255,255,255,.9), transparent 60%);background-size:600px 220px;animation:drift 10s linear infinite}
+@keyframes drift{from{transform:translateY(-30px)}to{transform:translateY(30px)}}
 .wrap{max-width:880px;margin:0 auto;padding:24px 14px 44px}
 h1{margin:6px 0 4px;font-size:clamp(28px,4vw,44px)}
 .sub{color:var(--muted);margin:0 0 14px;font-size:14px}
-
-.card{
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:var(--radius);
-  box-shadow:var(--shadow);
-  backdrop-filter:blur(12px);
-  padding:16px;
-}
-
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);backdrop-filter:blur(12px);padding:16px}
 .status{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
-.pill{
-  flex:1;min-width:200px;
-  background:var(--card2);
-  border:1px solid var(--border);
-  border-radius:999px;
-  padding:8px 10px;
-  display:flex;gap:8px;align-items:center;
-  font-size:14px;
-}
+.pill{flex:1;min-width:200px;background:var(--card2);border:1px solid var(--border);border-radius:999px;padding:8px 10px;display:flex;gap:8px;align-items:center;font-size:14px}
 .dot{width:9px;height:9px;border-radius:50%;background:var(--warn)}
 .dot.ok{background:var(--ok)}
 .dot.bad{background:var(--bad)}
-
-textarea,input,select{
-  width:100%;
-  box-sizing:border-box;
-  background:rgba(255,255,255,0.08);
-  border:1px solid rgba(255,255,255,0.18);
-  border-radius:12px;
-  padding:10px;
-  color:var(--text);
-  font-size:14px;
-}
-
-textarea{
-  min-height:110px;
-  resize:vertical;
-  font-family:ui-monospace,Menlo,Consolas,monospace;
-}
-
+textarea,input,select{width:100%;box-sizing:border-box;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:10px;color:var(--text);font-size:14px}
+textarea{min-height:110px;resize:vertical;font-family:ui-monospace,Menlo,Consolas,monospace}
 label{font-size:12px;color:var(--muted);margin:8px 0 4px;display:block}
-
-button{
-  border:1px solid rgba(255,255,255,0.18);
-  background:rgba(255,255,255,0.10);
-  color:var(--text);
-  border-radius:14px;
-  padding:10px 13px;
-  cursor:pointer;
-  font-weight:700;
-  font-size:14px;
-}
-
-button.primary{background:rgba(34,197,94,0.18);border-color:rgba(34,197,94,0.35)}
-button.secondary{background:rgba(245,158,11,0.16);border-color:rgba(245,158,11,0.35)}
-
+button{border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.10);color:var(--text);border-radius:14px;padding:10px 13px;cursor:pointer;font-weight:700;font-size:14px}
+button.primary{background:rgba(34,197,94,.18);border-color:rgba(34,197,94,.35)}
+button.secondary{background:rgba(245,158,11,.16);border-color:rgba(245,158,11,.35)}
+button:disabled{opacity:.55;cursor:not-allowed}
 .actions{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
-
-.result{
-  margin-top:12px;
-  background:rgba(0,0,0,0.25);
-  border:1px solid rgba(255,255,255,0.12);
-  border-radius:14px;
-  padding:10px;
-  min-height:96px;
-}
-
+.result{margin-top:12px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:10px;min-height:96px;white-space:pre-wrap}
 .mono{font-family:ui-monospace,Menlo,Consolas,monospace}
-.muted{color:var(--muted)}
-.small{font-size:12px}
-
 footer{text-align:center;margin-top:14px;font-size:12px;color:var(--muted)}
 </style>
 </head>
@@ -174,38 +45,333 @@ footer{text-align:center;margin-top:14px;font-size:12px;color:var(--muted)}
 <body>
 <div class="snow"></div>
 <div class="wrap">
-<h1>SyMoNeuRaL • RavenCalc 🎄</h1>
-<p class="sub">A calculus quick-checker for Raven — holiday edition.</p>
+  <h1>SyMoNeuRaL • RavenCalc 🎄</h1>
+  <p class="sub">A calculus quick-checker for Raven — holiday edition.</p>
 
-<div class="card">
-<div class="status">
-  <div class="pill"><span class="dot ok"></span><b>API ok</b></div>
-  <div class="pill"><span class="dot ok"></span><b>No key typing</b></div>
-  <div class="pill"><span class="dot ok"></span><b>SymPy powered</b></div>
+  <div class="card">
+    <div class="status">
+      <div class="pill"><span class="dot ok"></span><b>SymPy powered</b></div>
+      <div class="pill"><span class="dot ok"></span><b>No key typing</b></div>
+    </div>
+
+    <label>Expression / equation</label>
+    <textarea id="expression" placeholder="sin(x)/x"></textarea>
+
+    <label>Operation</label>
+    <div class="select-wrap">
+      <select id="operation">
+        <option value="simplify">Simplify</option>
+        <option value="differentiate">Differentiate</option>
+        <option value="integrate">Integrate</option>
+        <option value="limit">Limit</option>
+        <option value="solve">Solve</option>
+      </select>
+    </div>
+
+    <label>Difficulty</label>
+    <div class="select-wrap">
+      <select id="difficulty">
+        <option value="easy" selected>Easy</option>
+        <option value="medium">Medium</option>
+        <option value="hard">Hard</option>
+      </select>
+    </div>
+
+    <label style="display:flex;gap:10px;align-items:center;margin-top:10px;">
+      <input id="allow-logs" type="checkbox" style="width:auto;transform:scale(1.05);">
+      Include ln/log examples
+    </label>
+
+    <div class="actions">
+      <button class="primary" id="btn-compute" type="button">Compute 🎁</button>
+      <button class="secondary" id="btn-example" type="button">Example ✨</button>
+    </div>
+
+    <div class="result mono" id="result">—</div>
+    <footer>💜 Built for Raven • Merry Christmas • SyMoNeuRaL</footer>
+  </div>
 </div>
 
-<label>Expression / equation</label>
-<textarea id="expression" placeholder="sin(x)/x"></textarea>
+<script>
+(() => {
+  // Prefer Raven UI endpoint (no key), then protected one.
+  const API_CANDIDATES = [
+    "/ui/compute",
+    "/api/compute"
+  ];
 
-<label>Operation</label>
-<div class="select-wrap">
-  <select id="operation">
-    <option value="simplify">Simplify</option>
-    <option value="differentiate">Differentiate</option>
-    <option value="integrate">Integrate</option>
-    <option value="limit">Limit</option>
-    <option value="solve">Solve</option>
-  </select>
-</div>
+  const $expr   = document.getElementById("expression");
+  const $op     = document.getElementById("operation");
+  const $diff   = document.getElementById("difficulty");
+  const $logs   = document.getElementById("allow-logs");
+  const $result = document.getElementById("result");
+  const $btnC   = document.getElementById("btn-compute");
+  const $btnE   = document.getElementById("btn-example");
 
-<div class="actions">
-  <button class="primary">Compute 🎁</button>
-  <button class="secondary">Example ✨</button>
-</div>
+  const COMPUTE_LABEL = $btnC.textContent;
 
-<div class="result mono">—</div>
-<footer>💜 Built for Raven • Merry Christmas • SyMoNeuRaL</footer>
-</div>
-</div>
+  function setBusy(busy){
+    $btnC.disabled = busy;
+    $btnE.disabled = busy;
+    $btnC.textContent = busy ? "Working…" : COMPUTE_LABEL;
+  }
+
+  function normalizeInput(s){
+    return (s ?? "")
+      .replace(/\\r\\n/g, "\\n")
+      .replace(/\\u2192/g, "->") // →
+      .trim();
+  }
+
+  function sympyNormalize(expr){ return (expr ?? "").replace(/\\^/g, "**"); }
+  function normalizeVariables(expr){ return (expr ?? "").replace(/\\bX\\b/g, "x"); }
+
+  function parseLimit(raw){
+    // Accept: "f(x), x->0", "f(x), x->0+", "f(x), x->0-"
+    const parts = (raw ?? "").split(",");
+    if (parts.length < 2) return null;
+
+    const f = parts[0].trim();
+    const spec = parts.slice(1).join(",").trim().replace(/→/g, "->").replace(/⇒/g, "->");
+    const m = spec.match(/^([a-zA-Z]\\w*)\\s*-\\>\\s*([^\\s]+)\\s*([+-])?$/);
+    if (!m) return null;
+
+    return { f, wrt: m[1], to: m[2], dir: m[3] || "" };
+  }
+
+  async function postJson(url, payload){
+    const u = url + (url.includes("?") ? "&" : "?") + "v=" + Date.now();
+    const res = await fetch(u, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      cache: "no-store",
+    });
+    const text = await res.text();
+    let data = null;
+    try { data = text ? JSON.parse(text) : null; } catch (_) {}
+    return { res, text, data };
+  }
+
+  function extractResult(data, rawText){
+    if (!data) return rawText || "(empty response)";
+    if (data.detail && !data.result) return "ERROR:\\n" + String(data.detail);
+    if (data.result !== undefined && String(data.result).trim() !== "") return String(data.result);
+    if (data.latex && String(data.latex).trim() !== "" && String(data.latex) !== "\\\\left[ \\\\right]") return String(data.latex);
+    return JSON.stringify(data, null, 2);
+  }
+
+  function buildPayload(rawExpression, operation){
+    // IMPORTANT: match schemas.py (ComputeRequest) fields:
+    // operation, expression, variables, wrt, n, a, b, limit_to
+    let expr = sympyNormalize(normalizeVariables(rawExpression));
+
+    const payload = {
+      operation,
+      expression: expr
+    };
+
+    if (operation === "limit") {
+      // Make limits work even if backend is older: we explicitly populate wrt + limit_to.
+      const lim = parseLimit(expr);
+      if (lim) {
+        payload.expression = sympyNormalize(normalizeVariables(lim.f));
+        payload.wrt = normalizeVariables(lim.wrt);
+
+        // Encode one-sided limits into limit_to (schemas supports limit_to only).
+        // sympy_engine.limit() already understands "0+" / "0-".
+        payload.limit_to = sympyNormalize(lim.to) + (lim.dir || "");
+      }
+    }
+
+    return payload;
+  }
+
+  async function compute(){
+    const raw = normalizeInput($expr.value);
+    const operation = $op.value;
+
+    if (!raw) {
+      $result.textContent = "Type an expression first.\\n\\nHit Example ✨ to load one.";
+      return;
+    }
+
+    setBusy(true);
+    $result.textContent = "Working…";
+
+    try {
+      const payload = buildPayload(raw, operation);
+
+      let lastErr = null;
+      for (const url of API_CANDIDATES) {
+        try {
+          const { res, text, data } = await postJson(url, payload);
+          if (!res.ok) {
+            lastErr = `Tried ${url} → HTTP ${res.status}\\n\\n${text || "(empty)"}`;
+            continue;
+          }
+          $result.textContent = extractResult(data, text);
+          return;
+        } catch (e) {
+          lastErr = `Tried ${url} → FETCH ERROR\\n\\n${String(e)}`;
+        }
+      }
+
+      $result.textContent =
+        "Could not compute a result (backend sleeping, rate limited, or route mismatch).\\n\\n" +
+        "Tried:\\n" + API_CANDIDATES.map(x => "  - " + x).join("\\n") +
+        "\\n\\nLast error:\\n" + (lastErr || "(none)");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // -------- Random Example Generator (kept) --------
+  function randInt(min, max){ return Math.floor(Math.random() * (max - min + 1)) + min; }
+  function pick(arr){ return arr[randInt(0, arr.length - 1)]; }
+  function randVar(){ return pick(["x","x","x","t","u"]); }
+  function powToken(){ return "^"; }
+
+  function buildRandomExample(op, difficulty, allowLogs){
+    const v = randVar();
+    const p = powToken();
+    const isEasy = difficulty === "easy";
+    const isMed  = difficulty === "medium";
+    const isHard = difficulty === "hard";
+
+    const a = isEasy ? randInt(2,6) : isMed ? randInt(2,9) : randInt(2,12);
+    const b = isEasy ? randInt(1,9) : isMed ? randInt(1,12) : randInt(1,18);
+    const n = isEasy ? randInt(2,3) : isMed ? randInt(2,4) : randInt(2,6);
+
+    if (op === "simplify") {
+      if (isEasy) {
+        const k = randInt(2,6);
+        return `((${v}${p}2 - ${k}${p}2)/(${v} - ${k}))`;
+      }
+      if (Math.random() < 0.5) {
+        const power = isMed ? randInt(2,4) : randInt(3,5);
+        return `((${v}${p}${power} - 1)/(${v} - 1))`;
+      } else {
+        const k = randInt(2,8);
+        return `((${v}${p}2 - ${k}${p}2)/(${v} - ${k}))`;
+      }
+    }
+
+    if (op === "differentiate") {
+      const forms = [];
+      forms.push(`sin(${v})*${v}${p}${n}`);
+      forms.push(`${v}${p}${n} + ${a}*${v} + ${b}`);
+      forms.push(`cos(${v})*${v}${p}${randInt(1,3)}`);
+      if (!isEasy) {
+        forms.push(`exp(${v})*(${v}${p}2 + ${a}*${v})`);
+        forms.push(`(${a}*${v}+${b})${p}${randInt(2,3)}`);
+      }
+      if ((isMed || isHard) && allowLogs) {
+        forms.push(`log(${v})*${v}${p}${randInt(1,3)}`);
+      }
+      if (isHard && Math.random() < 0.35) {
+        forms.push(`(sin(${v})+${a})/(${v}${p}2)`);
+      }
+      return pick(forms);
+    }
+
+    if (op === "integrate") {
+      const forms = [];
+      forms.push(`${v}${p}${n}`);
+      forms.push(`${a}*${v}${p}${n} + ${b}*${v}`);
+      forms.push(`sin(${v})`);
+      forms.push(`cos(${v})`);
+      if (!isEasy) {
+        forms.push(`exp(${v})`);
+        forms.push(`(${a}*${v}+${b})${p}${randInt(2,3)}`);
+      }
+      if (isHard && allowLogs && Math.random() < 0.35) {
+        forms.push(`log(${v})`);
+        forms.push(`${v}*log(${v})`);
+      }
+      return pick(forms);
+    }
+
+    if (op === "limit") {
+      const forms = [];
+      forms.push(`sin(${v})/${v}, ${v}->0`);
+      if (!isEasy) {
+        forms.push(`(1 - cos(${v}))/${v}${p}2, ${v}->0`);
+        forms.push(`(exp(${v}) - 1)/${v}, ${v}->0`);
+        const k = randInt(2,8);
+        forms.push(`(${v}${p}2 - ${k}${p}2)/(${v} - ${k}), ${v}->${k}`);
+      }
+      if (isHard && Math.random() < 0.35) {
+        const k = randInt(2,8);
+        forms.push(`(${v} - ${k})/(${v}${p}2 - ${k}${p}2), ${v}->${k}`);
+        if (Math.random() < 0.35) forms.push(`1/${v}, ${v}->0+`);
+        if (Math.random() < 0.35) forms.push(`1/${v}, ${v}->0-`);
+      }
+      return pick(forms);
+    }
+
+    if (op === "solve") {
+      if (isEasy) {
+        const k = randInt(2,12);
+        const rhs = randInt(-5, 15);
+        return `${v}-${k}=${rhs}`;
+      }
+      if (Math.random() < (isHard ? 0.45 : 0.30)) {
+        const m = randInt(2, 6);
+        const add = randInt(1, 10);
+        const rhs = randInt(5, 30);
+        return `${m}*(${v}+${add})=${rhs}`;
+      } else {
+        const m = randInt(1, 8);
+        const add = randInt(-12, 12);
+        const rhs = randInt(-10, 25);
+        const left = (m === 1) ? `${v}` : `${m}*${v}`;
+        const sign = add >= 0 ? `+${add}` : `${add}`;
+        return `${left}${sign}=${rhs}`;
+      }
+    }
+
+    return `${v}+7=2`;
+  }
+
+  async function loadExample(){
+    const op = $op.value;
+    const difficulty = $diff.value;
+    const allowLogs = !!$logs.checked;
+
+    const oldText = $btnE.textContent;
+    $btnE.textContent = "Example…";
+
+    try {
+      $expr.value = buildRandomExample(op, difficulty, allowLogs);
+      await compute();
+    } finally {
+      $btnE.textContent = oldText;
+    }
+  }
+
+  function clearForModeChange(){
+    setBusy(false);
+    $expr.value = "";
+    $result.textContent = "—";
+    $expr.focus();
+  }
+
+  $op.addEventListener("change", clearForModeChange);
+  $diff.addEventListener("change", clearForModeChange);
+  $logs.addEventListener("change", clearForModeChange);
+
+  $expr.addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") compute();
+  });
+
+  $btnC.addEventListener("click", compute);
+  $btnE.addEventListener("click", loadExample);
+
+  $expr.focus();
+})();
+</script>
+
 </body>
 </html>
+
