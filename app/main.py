@@ -4,7 +4,7 @@ import re
 from pathlib import Path
 from typing import Optional, Tuple
 
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 
 from .config import settings
@@ -137,7 +137,7 @@ async def ui_compute(req: Request, payload: ComputeRequest):
 
 
 @app.post("/api/compute", response_model=ComputeResponse)
-async def api_compute(req: Request, payload: ComputeRequest, _=require_api_key):
+async def api_compute(req: Request, payload: ComputeRequest, _=Depends(require_api_key)):
     rl = _rate_limit_or_429(req)
     if rl:
         return rl

@@ -3,523 +3,495 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>SyMoNeuRaL • RavenCalc 🎄</title>
+<title>SyMoNeuRaL • RavenCalc 🍁</title>
 
 <meta http-equiv="Cache-Control" content="no-store, max-age=0" />
 <meta http-equiv="Pragma" content="no-cache" />
 <meta http-equiv="Expires" content="0" />
 
 <style>
-select,select option,select optgroup{background-color:#0f151b!important;color:#eaf2ff!important}
+/* =========================================================
+   RavenCalc — Back to School edition
+   Same bones as the Christmas build. The snow became leaves.
+   ========================================================= */
+
+select,select option,select optgroup{background-color:#171008!important;color:#fff3e2!important}
 .select-wrap{position:relative}
 .select-wrap::after{content:"▾";position:absolute;right:14px;top:50%;transform:translateY(-50%);pointer-events:none;color:rgba(255,255,255,.65);font-size:14px}
 select{-webkit-appearance:none;-moz-appearance:none;appearance:none;padding-right:34px;border:1px solid rgba(255,255,255,.10)}
-select:focus{outline:2px solid rgba(120,200,255,.35);outline-offset:2px}
-:root{--card:rgba(255,255,255,.08);--card2:rgba(255,255,255,.06);--text:rgba(255,255,255,.92);--muted:rgba(255,255,255,.65);--border:rgba(255,255,255,.14);--shadow:0 10px 35px rgba(0,0,0,.45);--radius:18px;--ok:#22c55e;--warn:#f59e0b;--bad:#ef4444}
-body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;background:radial-gradient(1000px 600px at 15% 10%, rgba(16,185,129,.18), transparent 60%),radial-gradient(900px 500px at 85% 15%, rgba(245,158,11,.14), transparent 55%),radial-gradient(1100px 700px at 50% 95%, rgba(59,130,246,.12), transparent 60%),linear-gradient(180deg,#061014,#03070a);color:var(--text);min-height:100vh}
+select:focus{outline:2px solid rgba(255,183,77,.45);outline-offset:2px}
+
+:root{
+  --card:rgba(255,255,255,.07);
+  --card2:rgba(255,255,255,.05);
+  --text:rgba(255,247,237,.94);
+  --muted:rgba(255,240,220,.62);
+  --border:rgba(255,255,255,.13);
+  --shadow:0 10px 35px rgba(0,0,0,.5);
+  --radius:18px;
+  --ok:#84cc16; --warn:#f59e0b; --bad:#ef4444;
+  --amber:#f59e0b; --rust:#c2410c; --gold:#fbbf24; --chalk:#a7f3d0;
+}
+
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+  /* autumn light through a classroom window */
+  background:
+    radial-gradient(1000px 600px at 15% 8%,  rgba(245,158,11,.20), transparent 60%),
+    radial-gradient(900px 520px at 88% 12%,  rgba(194,65,12,.18),  transparent 58%),
+    radial-gradient(1100px 700px at 50% 96%, rgba(132,204,22,.10), transparent 62%),
+    linear-gradient(180deg,#1a1005,#0b0704);
+  color:var(--text);
+  min-height:100vh;
+}
 
 /* =========================================================
-   Raven’s “BIG SNOWBALLS” + WINDOW-EDGE ACCUMULATION
-   - Background: large falling snow clumps (3 layers)
-   - Foreground: “window frame” snow buildup on edges + corners
-   - No JS; pointer-events none; respects reduced motion
+   Raven's BIG SNOWBALLS, regrown as LEAVES
+   - three drifting layers, pure CSS, no JS
+   - foreground drift piles along the bottom edge
+   - respects prefers-reduced-motion, same as the winter build
    ========================================================= */
 
-/* Big falling snowballs */
-.snow{
-  position:fixed; inset:0;
-  pointer-events:none;
-  z-index: 2;
-  opacity: .95;
-  filter: drop-shadow(0 2px 6px rgba(0,0,0,.35));
-  overflow:hidden;
-}
+.leaves{position:fixed; inset:0; pointer-events:none; z-index:2;
+  opacity:.95; filter:drop-shadow(0 2px 6px rgba(0,0,0,.4)); overflow:hidden;}
 
-/* Layer 1: chunky big balls */
-.snow::before{
-  content:"";
-  position:absolute; inset:-25% -25%;
+/* Layer 1 — big tumbling leaves */
+.leaves::before{
+  content:""; position:absolute; inset:-25% -25%;
   background-image:
-    radial-gradient(10px 10px at 8% 10%, rgba(255,255,255,.92), rgba(255,255,255,.12) 55%, transparent 72%),
-    radial-gradient(8px 8px at 22% 26%, rgba(255,255,255,.88), rgba(255,255,255,.10) 55%, transparent 72%),
-    radial-gradient(12px 12px at 40% 14%, rgba(255,255,255,.92), rgba(255,255,255,.12) 55%, transparent 72%),
-    radial-gradient(9px 9px at 58% 30%, rgba(255,255,255,.86), rgba(255,255,255,.10) 55%, transparent 72%),
-    radial-gradient(13px 13px at 76% 18%, rgba(255,255,255,.93), rgba(255,255,255,.12) 55%, transparent 72%),
-    radial-gradient(9px 9px at 90% 34%, rgba(255,255,255,.86), rgba(255,255,255,.10) 55%, transparent 72%),
-    radial-gradient(11px 11px at 16% 72%, rgba(255,255,255,.90), rgba(255,255,255,.11) 55%, transparent 72%),
-    radial-gradient(9px 9px at 36% 84%, rgba(255,255,255,.86), rgba(255,255,255,.10) 55%, transparent 72%),
-    radial-gradient(12px 12px at 64% 78%, rgba(255,255,255,.91), rgba(255,255,255,.11) 55%, transparent 72%),
-    radial-gradient(10px 10px at 86% 88%, rgba(255,255,255,.88), rgba(255,255,255,.10) 55%, transparent 72%);
-  background-size: 320px 340px;
-  transform: translate3d(0,-140px,0);
-  animation: snowBig 1.8s linear infinite;
-  opacity:.95;
+    radial-gradient(11px 7px at 8% 10%,  rgba(251,191,36,.95), rgba(251,191,36,.10) 60%, transparent 74%),
+    radial-gradient(9px 6px  at 22% 26%, rgba(194,65,12,.90),  rgba(194,65,12,.10)  60%, transparent 74%),
+    radial-gradient(13px 8px at 40% 14%, rgba(245,158,11,.95), rgba(245,158,11,.10) 60%, transparent 74%),
+    radial-gradient(10px 6px at 58% 30%, rgba(220,38,38,.80),  rgba(220,38,38,.10)  60%, transparent 74%),
+    radial-gradient(14px 9px at 76% 18%, rgba(251,191,36,.92), rgba(251,191,36,.10) 60%, transparent 74%),
+    radial-gradient(10px 6px at 90% 34%, rgba(180,83,9,.88),   rgba(180,83,9,.10)   60%, transparent 74%),
+    radial-gradient(12px 7px at 16% 72%, rgba(245,158,11,.90), rgba(245,158,11,.10) 60%, transparent 74%),
+    radial-gradient(10px 6px at 36% 84%, rgba(194,65,12,.86),  rgba(194,65,12,.10)  60%, transparent 74%),
+    radial-gradient(13px 8px at 64% 78%, rgba(251,191,36,.91), rgba(251,191,36,.10) 60%, transparent 74%),
+    radial-gradient(11px 7px at 86% 88%, rgba(217,119,6,.88),  rgba(217,119,6,.10)  60%, transparent 74%);
+  background-size:320px 340px;
+  transform:translate3d(0,-140px,0);
+  animation:leafBig 9s linear infinite;
 }
 
-/* Layer 2: medium clumps */
-.snow::after{
-  content:"";
-  position:absolute; inset:-25% -25%;
+/* Layer 2 — medium, drifting the other way */
+.leaves::after{
+  content:""; position:absolute; inset:-25% -25%;
   background-image:
-    radial-gradient(6px 6px at 12% 18%, rgba(255,255,255,.70), rgba(255,255,255,.10) 55%, transparent 72%),
-    radial-gradient(5px 5px at 28% 36%, rgba(255,255,255,.62), rgba(255,255,255,.08) 55%, transparent 72%),
-    radial-gradient(7px 7px at 44% 22%, rgba(255,255,255,.72), rgba(255,255,255,.10) 55%, transparent 72%),
-    radial-gradient(5px 5px at 60% 44%, rgba(255,255,255,.60), rgba(255,255,255,.08) 55%, transparent 72%),
-    radial-gradient(7px 7px at 78% 28%, rgba(255,255,255,.70), rgba(255,255,255,.10) 55%, transparent 72%),
-    radial-gradient(6px 6px at 92% 48%, rgba(255,255,255,.64), rgba(255,255,255,.08) 55%, transparent 72%),
-    radial-gradient(5px 5px at 18% 78%, rgba(255,255,255,.60), rgba(255,255,255,.08) 55%, transparent 72%),
-    radial-gradient(7px 7px at 50% 82%, rgba(255,255,255,.70), rgba(255,255,255,.10) 55%, transparent 72%),
-    radial-gradient(6px 6px at 84% 76%, rgba(255,255,255,.64), rgba(255,255,255,.08) 55%, transparent 72%);
-  background-size: 420px 460px;
-  transform: translate3d(0,-180px,0);
-  animation: snowMid 3.1s linear infinite;
-  opacity:.70;
+    radial-gradient(7px 5px at 12% 18%, rgba(251,191,36,.75), transparent 70%),
+    radial-gradient(6px 4px at 30% 40%, rgba(194,65,12,.70),  transparent 70%),
+    radial-gradient(8px 5px at 52% 22%, rgba(245,158,11,.72), transparent 70%),
+    radial-gradient(6px 4px at 70% 46%, rgba(180,83,9,.66),   transparent 70%),
+    radial-gradient(7px 5px at 88% 26%, rgba(251,191,36,.70), transparent 70%),
+    radial-gradient(7px 5px at 24% 66%, rgba(217,119,6,.68),  transparent 70%),
+    radial-gradient(6px 4px at 60% 88%, rgba(194,65,12,.66),  transparent 70%);
+  background-size:260px 280px;
+  transform:translate3d(0,-120px,0);
+  animation:leafMid 13s linear infinite;
+  opacity:.8;
 }
 
-/* far faint specks */
-body::before{
-  content:"";
-  position:fixed; inset:0;
-  pointer-events:none;
-  z-index: 1;
+/* Layer 3 — far, small, slow */
+.leaves-far{position:fixed; inset:-25% -25%; pointer-events:none; z-index:1;
+  background-image:
+    radial-gradient(4px 3px at 18% 22%, rgba(251,191,36,.45), transparent 72%),
+    radial-gradient(4px 3px at 44% 54%, rgba(245,158,11,.40), transparent 72%),
+    radial-gradient(3px 2px at 68% 30%, rgba(194,65,12,.40),  transparent 72%),
+    radial-gradient(4px 3px at 84% 62%, rgba(217,119,6,.38),  transparent 72%);
+  background-size:200px 220px;
+  animation:leafFar 22s linear infinite;
+  opacity:.55;}
+
+@keyframes leafBig{ to{ transform:translate3d(-40px, 340px, 0) } }
+@keyframes leafMid{ to{ transform:translate3d(38px, 280px, 0) } }
+@keyframes leafFar{ to{ transform:translate3d(-18px, 220px, 0) } }
+
+/* Foreground: leaf drift piling along the window edge.
+   Same trick as the winter build's snow accumulation. */
+.window-leaves{position:fixed; inset:0; pointer-events:none; z-index:3;}
+.window-leaves::before{
+  content:""; position:absolute; left:0; right:0; bottom:0; height:60px;
   background:
-    radial-gradient(2px 2px at 10% 12%, rgba(255,255,255,.22), transparent 60%),
-    radial-gradient(2px 2px at 26% 30%, rgba(255,255,255,.18), transparent 60%),
-    radial-gradient(2px 2px at 44% 18%, rgba(255,255,255,.22), transparent 60%),
-    radial-gradient(2px 2px at 62% 36%, rgba(255,255,255,.16), transparent 60%),
-    radial-gradient(2px 2px at 78% 20%, rgba(255,255,255,.20), transparent 60%),
-    radial-gradient(2px 2px at 92% 44%, rgba(255,255,255,.16), transparent 60%),
-    radial-gradient(2px 2px at 18% 74%, rgba(255,255,255,.16), transparent 60%),
-    radial-gradient(2px 2px at 54% 82%, rgba(255,255,255,.20), transparent 60%),
-    radial-gradient(2px 2px at 88% 76%, rgba(255,255,255,.16), transparent 60%);
-  background-size: 520px 560px;
-  opacity:.30;
-  animation: snowFar 6.2s linear infinite;
+    radial-gradient(24px 14px at 6% 100%,  rgba(180,83,9,.55), transparent 70%),
+    radial-gradient(30px 16px at 20% 100%, rgba(194,65,12,.50), transparent 70%),
+    radial-gradient(26px 14px at 36% 100%, rgba(245,158,11,.45), transparent 70%),
+    radial-gradient(32px 17px at 54% 100%, rgba(180,83,9,.50), transparent 70%),
+    radial-gradient(27px 15px at 72% 100%, rgba(217,119,6,.46), transparent 70%),
+    radial-gradient(30px 16px at 90% 100%, rgba(194,65,12,.52), transparent 70%);
 }
 
-@keyframes snowBig{
-  0%   { transform: translate3d(-40px,-220px,0); }
-  100% { transform: translate3d(140px, 260px,0); }
-}
-@keyframes snowMid{
-  0%   { transform: translate3d(-90px,-260px,0); }
-  100% { transform: translate3d(110px, 330px,0); }
-}
-@keyframes snowFar{
-  0%   { transform: translate3d(-40px,-90px,0); }
-  100% { transform: translate3d( 30px, 140px,0); }
-}
-
-/* Window-edge accumulation overlay */
-.window-snow{
-  position:fixed; inset:0;
-  pointer-events:none;
-  z-index: 20; /* above UI */
-  opacity: 1;
-}
-
-/* left + right edges (thick, lumpy) */
-.window-snow::before{
-  content:"";
-  position:absolute; inset:0;
-  background:
-    /* left vertical ridge */
-    radial-gradient(38px 34px at 0% 10%, rgba(255,255,255,.92), rgba(255,255,255,.10) 68%, transparent 78%),
-    radial-gradient(46px 40px at 0% 22%, rgba(255,255,255,.94), rgba(255,255,255,.10) 68%, transparent 78%),
-    radial-gradient(34px 30px at 0% 36%, rgba(255,255,255,.90), rgba(255,255,255,.10) 68%, transparent 78%),
-    radial-gradient(48px 42px at 0% 52%, rgba(255,255,255,.95), rgba(255,255,255,.10) 68%, transparent 78%),
-    radial-gradient(36px 32px at 0% 68%, rgba(255,255,255,.90), rgba(255,255,255,.10) 68%, transparent 78%),
-    radial-gradient(44px 38px at 0% 84%, rgba(255,255,255,.93), rgba(255,255,255,.10) 68%, transparent 78%),
-
-    /* right vertical ridge */
-    radial-gradient(38px 34px at 100% 14%, rgba(255,255,255,.92), rgba(255,255,255,.10) 68%, transparent 78%),
-    radial-gradient(46px 40px at 100% 28%, rgba(255,255,255,.94), rgba(255,255,255,.10) 68%, transparent 78%),
-    radial-gradient(34px 30px at 100% 44%, rgba(255,255,255,.90), rgba(255,255,255,.10) 68%, transparent 78%),
-    radial-gradient(48px 42px at 100% 60%, rgba(255,255,255,.95), rgba(255,255,255,.10) 68%, transparent 78%),
-    radial-gradient(36px 32px at 100% 76%, rgba(255,255,255,.90), rgba(255,255,255,.10) 68%, transparent 78%),
-    radial-gradient(44px 38px at 100% 90%, rgba(255,255,255,.93), rgba(255,255,255,.10) 68%, transparent 78%),
-
-    /* soft edge fade */
-    linear-gradient(90deg, rgba(255,255,255,.18), transparent 22%),
-    linear-gradient(270deg, rgba(255,255,255,.18), transparent 22%);
-  filter: drop-shadow(0 6px 14px rgba(0,0,0,.35));
-  opacity: .95;
-}
-
-/* top edge + corners (packed snow ledge) */
-.window-snow::after{
-  content:"";
-  position:absolute; inset:0;
-  background:
-    /* top ledge (wide blobs) */
-    radial-gradient(56px 46px at 10% 0%, rgba(255,255,255,.95), rgba(255,255,255,.12) 68%, transparent 78%),
-    radial-gradient(64px 52px at 26% 0%, rgba(255,255,255,.96), rgba(255,255,255,.12) 68%, transparent 78%),
-    radial-gradient(52px 44px at 44% 0%, rgba(255,255,255,.93), rgba(255,255,255,.10) 68%, transparent 78%),
-    radial-gradient(70px 56px at 62% 0%, rgba(255,255,255,.96), rgba(255,255,255,.12) 68%, transparent 78%),
-    radial-gradient(58px 48px at 80% 0%, rgba(255,255,255,.94), rgba(255,255,255,.11) 68%, transparent 78%),
-    radial-gradient(66px 54px at 92% 0%, rgba(255,255,255,.96), rgba(255,255,255,.12) 68%, transparent 78%),
-
-    /* corner piles */
-    radial-gradient(120px 90px at 0% 0%, rgba(255,255,255,.96), rgba(255,255,255,.10) 68%, transparent 78%),
-    radial-gradient(120px 90px at 100% 0%, rgba(255,255,255,.96), rgba(255,255,255,.10) 68%, transparent 78%),
-
-    /* top fade */
-    linear-gradient(180deg, rgba(255,255,255,.22), transparent 26%);
-  filter: drop-shadow(0 6px 16px rgba(0,0,0,.42));
-  opacity: .95;
-}
-
-/* reduce motion accessibility */
 @media (prefers-reduced-motion: reduce){
-  .snow::before, .snow::after, body::before{animation:none!important}
+  .leaves::before,.leaves::after,.leaves-far{animation:none}
 }
 
-/* Keep the app above background snow, but below window edges */
-.wrap{max-width:880px;margin:0 auto;padding:24px 14px 44px;position:relative;z-index:10}
-h1{margin:6px 0 4px;font-size:clamp(28px,4vw,44px)}
-.sub{color:var(--muted);margin:0 0 14px;font-size:14px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);backdrop-filter:blur(12px);padding:16px}
-.status{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
-.pill{flex:1;min-width:200px;background:var(--card2);border:1px solid var(--border);border-radius:999px;padding:8px 10px;display:flex;gap:8px;align-items:center;font-size:14px}
-.dot{width:9px;height:9px;border-radius:50%;background:var(--warn)}
-.dot.ok{background:var(--ok)}
-.dot.bad{background:var(--bad)}
-textarea,input,select{width:100%;box-sizing:border-box;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:10px;color:var(--text);font-size:14px}
-textarea{min-height:110px;resize:vertical;font-family:ui-monospace,Menlo,Consolas,monospace}
-label{font-size:12px;color:var(--muted);margin:8px 0 4px;display:block}
-button{border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.10);color:var(--text);border-radius:14px;padding:10px 13px;cursor:pointer;font-weight:700;font-size:14px}
-button.primary{background:rgba(34,197,94,.18);border-color:rgba(34,197,94,.35)}
-button.secondary{background:rgba(245,158,11,.16);border-color:rgba(245,158,11,.35)}
-button:disabled{opacity:.55;cursor:not-allowed}
-.actions{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
-.result{margin-top:12px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:10px;min-height:96px;white-space:pre-wrap}
-.mono{font-family:ui-monospace,Menlo,Consolas,monospace}
-footer{text-align:center;margin-top:14px;font-size:12px;color:var(--muted)}
+/* ---------- layout ---------- */
+.wrap{position:relative; z-index:5; max-width:760px; margin:0 auto; padding:28px 18px 60px}
+h1{margin:0 0 6px; font-size:clamp(22px,4.4vw,34px); letter-spacing:.2px}
+.sub{margin:0 0 20px; color:var(--muted); font-size:15px}
+
+.card{background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+  box-shadow:var(--shadow); padding:20px; backdrop-filter:blur(8px)}
+
+.status{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px}
+.pill{display:flex; align-items:center; gap:7px; background:var(--card2);
+  border:1px solid var(--border); border-radius:999px; padding:6px 12px; font-size:12.5px}
+.dot{width:8px; height:8px; border-radius:50%}
+.dot.ok{background:var(--ok); box-shadow:0 0 8px var(--ok)}
+
+label{display:block; margin:14px 0 6px; font-size:13px; color:var(--muted); font-weight:600}
+textarea,input[type=text],select{width:100%; box-sizing:border-box; background:#171008;
+  color:var(--text); border:1px solid var(--border); border-radius:12px;
+  padding:12px 14px; font-size:15px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+textarea{min-height:74px; resize:vertical}
+textarea:focus,input:focus{outline:2px solid rgba(255,183,77,.4); outline-offset:2px}
+
+.row{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+@media (max-width:560px){ .row{grid-template-columns:1fr} }
+
+.check{display:flex; gap:10px; align-items:center; margin-top:12px; font-size:14px; color:var(--text)}
+.check input{width:auto; transform:scale(1.1)}
+
+.actions{display:flex; gap:10px; margin-top:18px; flex-wrap:wrap}
+button{cursor:pointer; border-radius:12px; padding:12px 20px; font-size:15px;
+  font-weight:600; border:1px solid var(--border); transition:transform .08s ease, filter .15s ease}
+button:active{transform:translateY(1px)}
+button.primary{background:linear-gradient(180deg,var(--gold),var(--amber)); color:#2a1600; border-color:transparent}
+button.primary:hover{filter:brightness(1.07)}
+button.secondary{background:var(--card2); color:var(--text)}
+button.secondary:hover{background:rgba(255,255,255,.10)}
+
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.result{margin-top:18px; background:#0d0805; border:1px solid var(--border);
+  border-radius:12px; padding:16px; min-height:52px; font-size:15px;
+  white-space:pre-wrap; word-break:break-word; line-height:1.55}
+.result.err{border-color:rgba(239,68,68,.5); color:#fecaca}
+
+.steps{margin-top:12px; border-left:3px solid var(--amber); padding:4px 0 4px 14px}
+.steps h3{margin:0 0 8px; font-size:13px; color:var(--gold); letter-spacing:.4px; text-transform:uppercase}
+.steps ol{margin:0; padding-left:20px; font-size:14px; line-height:1.7; color:var(--text)}
+.steps li{margin-bottom:5px}
+
+footer{text-align:center; margin-top:16px; font-size:12.5px; color:var(--muted)}
+
+/* ---------- the locker (was: the present) ---------- */
+.gift-row{margin:0 0 18px}
+.giftbtn{width:100%; display:flex; align-items:center; justify-content:space-between;
+  gap:14px; background:linear-gradient(180deg, rgba(245,158,11,.20), rgba(194,65,12,.16));
+  border:1px solid rgba(251,191,36,.42); border-radius:16px; padding:14px 18px; color:var(--text)}
+.giftbtn:hover{filter:brightness(1.1)}
+.gift-left{display:flex; align-items:center; gap:12px}
+.gift-icon{width:26px; height:32px; border-radius:3px; position:relative; flex:none;
+  background:linear-gradient(180deg,#3f6212,#1a2e05); border:1px solid rgba(255,255,255,.25)}
+.gift-icon::before{content:""; position:absolute; left:4px; top:6px; width:4px; height:12px;
+  border-radius:2px; background:rgba(255,255,255,.55)}
+.gift-icon::after{content:""; position:absolute; left:3px; right:3px; top:3px; height:2px;
+  background:rgba(255,255,255,.30)}
+.gift-label{font-weight:700}
+.gift-cta{font-size:12px; letter-spacing:1.2px; opacity:.9; border:1px dashed rgba(255,255,255,.4);
+  padding:5px 10px; border-radius:999px; white-space:nowrap}
+
+.gift-overlay{position:fixed; inset:0; z-index:50; display:none; align-items:center;
+  justify-content:center; background:rgba(0,0,0,.72); padding:20px; backdrop-filter:blur(4px)}
+.gift-overlay.open{display:flex}
+.gift-modal{background:linear-gradient(180deg,#1c1206,#0e0904); border:1px solid rgba(251,191,36,.35);
+  border-radius:20px; max-width:520px; width:100%; box-shadow:0 24px 70px rgba(0,0,0,.7);
+  max-height:88vh; overflow:auto}
+.gift-topbar{display:flex; align-items:center; justify-content:space-between;
+  padding:16px 18px; border-bottom:1px solid var(--border)}
+.gift-title{font-weight:800; font-size:17px}
+.gift-close{background:transparent; border:none; color:var(--muted); font-size:18px; padding:4px 8px}
+.gift-content{padding:22px 20px 24px}
+
+.locker-stage{display:flex; justify-content:center; margin-bottom:20px}
+.locker{width:96px; height:120px; position:relative; border-radius:6px;
+  background:linear-gradient(180deg,#3f6212,#1a2e05); border:2px solid rgba(255,255,255,.22);
+  animation:lockerBounce 2.4s ease-in-out infinite}
+.locker::before{content:""; position:absolute; left:12px; top:22px; width:8px; height:26px;
+  border-radius:4px; background:rgba(255,255,255,.6)}
+.locker .vents{position:absolute; left:14px; right:14px; top:10px; height:3px;
+  background:rgba(255,255,255,.35); box-shadow:0 6px 0 rgba(255,255,255,.28)}
+.locker .door{position:absolute; inset:0; border-radius:4px; transform-origin:left center;
+  background:linear-gradient(180deg,#4d7c0f,#243d06); border:1px solid rgba(255,255,255,.18);
+  animation:doorOpen .9s ease-out .5s forwards}
+
+@keyframes lockerBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes doorOpen{to{transform:perspective(400px) rotateY(-105deg); opacity:.15}}
+
+.gift-reveal{animation:revealIn .6s ease-out .9s both}
+@keyframes revealIn{from{opacity:0; transform:translateY(10px)}to{opacity:1; transform:none}}
+.gift-message{font-size:15.5px; line-height:1.7; text-align:center}
+.gift-message b{color:var(--gold)}
+.gift-note{margin-top:18px; padding:12px 14px; border:1px dashed rgba(255,255,255,.25);
+  border-radius:12px; font-size:13px; color:var(--muted); line-height:1.6}
+
+@media (prefers-reduced-motion: reduce){
+  .locker,.locker .door,.gift-reveal{animation:none}
+  .locker .door{opacity:.15; transform:perspective(400px) rotateY(-105deg)}
+}
 </style>
 </head>
 
 <body>
-<div class="snow"></div>
-<div class="window-snow"></div>
+<div class="leaves-far"></div>
+<div class="leaves"></div>
+<div class="window-leaves"></div>
 
 <div class="wrap">
-  <h1>SyMoNeuRaL • RavenCalc 🎄</h1>
-  <p class="sub">A calculus quick-checker for Raven — holiday edition.</p>
+  <h1>SyMoNeuRaL • RavenCalc 🍁</h1>
+  <p class="sub">A calculus quick-checker for Raven — back to school edition.</p>
+
+  <div class="gift-row">
+    <button class="giftbtn" id="btn-gift" type="button" aria-haspopup="dialog" aria-controls="giftOverlay">
+      <span class="gift-left">
+        <span class="gift-icon" aria-hidden="true"></span>
+        <span class="gift-label">First day of school 🍁</span>
+      </span>
+      <span class="gift-cta">OPEN ME</span>
+    </button>
+  </div>
 
   <div class="card">
     <div class="status">
       <div class="pill"><span class="dot ok"></span><b>SymPy powered</b></div>
       <div class="pill"><span class="dot ok"></span><b>No key typing</b></div>
+      <div class="pill"><span class="dot ok"></span><b>Shows the steps</b></div>
     </div>
 
-    <label>Expression / equation</label>
+    <label for="expression">Expression / equation</label>
     <textarea id="expression" placeholder="sin(x)/x"></textarea>
 
-    <label>Operation</label>
-    <div class="select-wrap">
-      <select id="operation">
-        <option value="simplify">Simplify</option>
-        <option value="differentiate">Differentiate</option>
-        <option value="integrate">Integrate</option>
-        <option value="limit">Limit</option>
-        <option value="solve">Solve</option>
-      </select>
+    <div class="row">
+      <div>
+        <label for="operation">Operation</label>
+        <div class="select-wrap">
+          <select id="operation">
+            <option value="differentiate" selected>Differentiate</option>
+            <option value="integrate">Integrate</option>
+            <option value="limit">Limit</option>
+            <option value="solve">Solve</option>
+            <option value="simplify">Simplify</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label for="difficulty">Difficulty</label>
+        <div class="select-wrap">
+          <select id="difficulty">
+            <option value="easy" selected>Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+          </select>
+        </div>
+      </div>
     </div>
 
-    <label>Difficulty</label>
-    <div class="select-wrap">
-      <select id="difficulty">
-        <option value="easy" selected>Easy</option>
-        <option value="medium">Medium</option>
-        <option value="hard">Hard</option>
-      </select>
-    </div>
+    <label class="check" for="show-steps">
+      <input id="show-steps" type="checkbox" checked>
+      Show me the steps, not just the answer
+    </label>
 
-    <label style="display:flex;gap:10px;align-items:center;margin-top:10px;">
-      <input id="allow-logs" type="checkbox" style="width:auto;transform:scale(1.05);">
-      Include ln/log examples
+    <label class="check" for="allow-logs">
+      <input id="allow-logs" type="checkbox">
+      Include ln / log examples
     </label>
 
     <div class="actions">
-      <button class="primary" id="btn-compute" type="button">Compute 🎁</button>
-      <button class="secondary" id="btn-example" type="button">Example ✨</button>
+      <button class="primary" id="btn-compute" type="button">Compute 📐</button>
+      <button class="secondary" id="btn-example" type="button">Give me one ✏️</button>
     </div>
 
     <div class="result mono" id="result">—</div>
-    <footer>💜 Built for Raven • Merry Christmas • SyMoNeuRaL</footer>
+    <div id="steps-box"></div>
+
+    <footer>💙 Built for Raven • Go get 'em this year • SyMoNeuRaL</footer>
+  </div>
+</div>
+
+<!-- 🍁 First-day popup -->
+<div id="giftOverlay" class="gift-overlay" role="dialog" aria-modal="true" aria-hidden="true"
+     aria-label="A note for Raven">
+  <div class="gift-modal" role="document">
+    <div class="gift-topbar">
+      <div class="gift-title">🍁 Good luck this year, Raven!</div>
+      <button class="gift-close" type="button" aria-label="Close" data-gift-close>✕</button>
+    </div>
+    <div class="gift-content">
+      <div class="locker-stage" aria-hidden="true">
+        <div class="locker"><div class="vents"></div><div class="door"></div></div>
+      </div>
+      <div class="gift-reveal">
+        <div class="gift-message">
+          <b>New year, new notebook.</b><br><br>
+          Calculus is just a bunch of small rules stacked on top of each other.
+          You already know how to do hard things — this is only new, not harder.<br><br>
+          Tick <b>“show me the steps”</b> and it'll walk you through the rule it used,
+          so you can check your work instead of just checking your answer.<br><br>
+          Love you, <b>Gare-Bear</b> 💙
+        </div>
+
+        <!-- ============================================================
+             GARRETT: put your real message here.
+             The Christmas build had the Hurricanes Miller jersey + the
+             Avalanche tickets to see Burnzy in this spot. I left it as a
+             placeholder on purpose — that part is yours to write, not mine.
+             Delete this note block when you fill it in.
+             ============================================================ -->
+        <div class="gift-note">
+          ✏️ <b>Placeholder.</b> Replace this block in
+          <code>app/web/index.html</code> with whatever the real
+          back-to-school surprise is. Images go in as
+          <code>&lt;img class="gift-img" src="..."&gt;</code>, same as the
+          Christmas build.
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
 <script>
-(() => {
-  const API_CANDIDATES = ["/ui/compute","/api/compute"];
+/* ---------------------------------------------------------
+   Same API contract as the Christmas build: POST /ui/compute
+   with a ComputeRequest, no API key ever typed by Raven.
+   --------------------------------------------------------- */
 
-  const $expr   = document.getElementById("expression");
-  const $op     = document.getElementById("operation");
-  const $diff   = document.getElementById("difficulty");
-  const $logs   = document.getElementById("allow-logs");
-  const $result = document.getElementById("result");
-  const $btnC   = document.getElementById("btn-compute");
-  const $btnE   = document.getElementById("btn-example");
+const $ = id => document.getElementById(id);
 
-  const COMPUTE_LABEL = $btnC.textContent;
+const EXAMPLES = {
+  differentiate: {
+    easy:   ["x^3 + 2*x", "5*x^2 - 3*x + 1", "sin(x)", "4*x - 7"],
+    medium: ["x^2*sin(x)", "(x^2 + 1)/(x - 1)", "sqrt(x^2 + 1)", "cos(3*x)"],
+    hard:   ["sin(x^2)*exp(3*x)", "(x^2 + 1)^5/(x - 2)", "x*sqrt(1 - x^2)", "tan(x)^3"]
+  },
+  integrate: {
+    easy:   ["x^2", "3*x + 4", "cos(x)", "6*x^5"],
+    medium: ["x*exp(x)", "x*sin(x)", "1/(x^2 + 1)", "sin(x)*cos(x)"],
+    hard:   ["x^2*exp(x)", "sin(x)^2", "sqrt(1 - x^2)", "x/(x^2 + 4)"]
+  },
+  limit: {
+    easy:   ["sin(x)/x, x->0", "(x^2 - 1)/(x - 1), x->1", "(3*x + 2)/x, x->oo"],
+    medium: ["(1 - cos(x))/x^2, x->0", "tan(x)/x, x->0", "(x^2 - 4)/(x - 2), x->2"],
+    hard:   ["(1 + 1/x)^x, x->oo", "(sin(x) - x)/x^3, x->0", "x*sin(1/x), x->oo"]
+  },
+  solve: {
+    easy:   ["x^2 - 4", "2*x + 6", "x^2 - 9"],
+    medium: ["x^2 - 5*x + 6", "x^3 - x", "2*x^2 + 3*x - 2"],
+    hard:   ["x^3 - 6*x^2 + 11*x - 6", "x^4 - 5*x^2 + 4", "sin(x) - 1/2"]
+  },
+  simplify: {
+    easy:   ["(x^2 - 1)/(x - 1)", "2*x + 3*x", "x*x*x"],
+    medium: ["sin(x)^2 + cos(x)^2", "(x^3 - 8)/(x - 2)", "(x^2 - 4)/(x + 2)"],
+    hard:   ["(x^2 - 1)/(x^2 + 2*x + 1)", "tan(x)*cos(x)", "(x^4 - 16)/(x^2 - 4)"]
+  }
+};
 
-  function setBusy(busy){
-    $btnC.disabled = busy;
-    $btnE.disabled = busy;
-    $btnC.textContent = busy ? "Working…" : COMPUTE_LABEL;
+const LOG_EXAMPLES = {
+  differentiate: { easy:["ln(x)"], medium:["x*ln(x)", "ln(x^2 + 1)"], hard:["ln(sin(x))/x", "log(x)*exp(x)"] },
+  integrate:     { easy:["1/x"],   medium:["ln(x)"],                  hard:["x*ln(x)", "ln(x)/x"] },
+  limit:         { easy:["ln(1 + x)/x, x->0"], medium:["x*ln(x), x->0+"], hard:["ln(x)/x, x->oo"] },
+  solve:         { easy:["ln(x) - 2"], medium:["ln(x^2) - 4"], hard:["ln(x) + ln(x - 1)"] },
+  simplify:      { easy:["ln(x^2) - 2*ln(x)"], medium:["exp(ln(x))"], hard:["ln(x*y) - ln(x)"] }
+};
+
+function pickExample(){
+  const op = $("operation").value;
+  const diff = $("difficulty").value;
+  let bank = (EXAMPLES[op] && EXAMPLES[op][diff]) ? EXAMPLES[op][diff].slice() : ["x^2"];
+  if ($("allow-logs").checked && LOG_EXAMPLES[op] && LOG_EXAMPLES[op][diff]){
+    bank = bank.concat(LOG_EXAMPLES[op][diff]);
+  }
+  return bank[Math.floor(Math.random() * bank.length)];
+}
+
+function renderSteps(steps){
+  const box = $("steps-box");
+  if (!steps || !steps.length){ box.innerHTML = ""; return; }
+  const items = steps.map(s => "<li>" + escapeHtml(s) + "</li>").join("");
+  box.innerHTML =
+    '<div class="steps"><h3>How it got there</h3><ol>' + items + "</ol></div>";
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c =>
+    ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+}
+
+async function compute(){
+  const expr = $("expression").value.trim();
+  const result = $("result");
+  $("steps-box").innerHTML = "";
+
+  if (!expr){
+    result.className = "result mono err";
+    result.textContent = "Type something in first 🙂";
+    return;
   }
 
-  function normalizeInput(s){
-    return (s ?? "")
-      .replace(/\r\n/g, "\n")
-      .replace(/\u2192/g, "->")
-      .trim();
-  }
+  result.className = "result mono";
+  result.textContent = "thinking…";
 
-  function sympyNormalize(expr){ return (expr ?? "").replace(/\^/g, "**"); }
-  function normalizeVariables(expr){ return (expr ?? "").replace(/\bX\b/g, "x"); }
+  const payload = {
+    operation: $("operation").value,
+    expression: expr,
+    wrt: "x",
+    n: 1,
+    show_steps: $("show-steps").checked
+  };
 
-  function parseLimitStudent(raw){
-    const parts = String(raw ?? "").split(",");
-    if (parts.length < 2) return null;
-    const f = parts[0].trim();
-    const spec = parts.slice(1).join(",").trim().replace(/→/g, "->").replace(/⇒/g, "->");
-    const m = spec.match(/^([a-zA-Z]\w*)\s*-\>\s*([^\s]+)\s*([+-])?$/);
-    if (!m) return null;
-    return { f, wrt: m[1], to: m[2], dir: m[3] || "" };
-  }
-
-  async function postJson(url, payload){
-    const u = url + (url.includes("?") ? "&" : "?") + "v=" + Date.now();
-    const res = await fetch(u, {
+  try{
+    const res = await fetch("/ui/compute", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-      cache: "no-store",
+      body: JSON.stringify(payload)
     });
-    const text = await res.text();
-    let data = null;
-    try { data = text ? JSON.parse(text) : null; } catch (_) {}
-    return { res, text, data };
-  }
+    const data = await res.json();
 
-  function extractResult(data, rawText){
-    if (!data) return rawText || "(empty response)";
-    if (data.detail && !data.result) return "ERROR:\n" + String(data.detail);
-    if (data.result !== undefined && String(data.result).trim() !== "") return String(data.result);
-    if (data.latex && String(data.latex).trim() !== "" && String(data.latex) !== "\\left[ \\right]") return String(data.latex);
-    return JSON.stringify(data, null, 2);
-  }
-
-  function buildPayload(rawExpression, operation){
-    let expr = sympyNormalize(normalizeVariables(rawExpression));
-    const payload = { operation, expression: expr };
-
-    if (operation === "limit") {
-      const parsed = parseLimitStudent(expr);
-      if (parsed) {
-        let toRaw = String(parsed.to).trim();
-        let dir = String(parsed.dir || "").trim();
-
-        if ((toRaw.endsWith("+") || toRaw.endsWith("-")) && dir === "") {
-          dir = toRaw.slice(-1);
-          toRaw = toRaw.slice(0, -1).trim();
-        }
-
-        payload.expression = parsed.f;
-        payload.wrt = parsed.wrt;
-        payload.limit_to = sympyNormalize(toRaw);
-        payload.limit_dir = dir;
-      }
-    }
-
-    return payload;
-  }
-
-  async function compute(){
-    const raw = normalizeInput($expr.value);
-    const operation = $op.value;
-
-    if (!raw) {
-      $result.textContent = "Type an expression first.\n\nHit Example ✨ to load one.";
+    if (!res.ok || data.ok === false){
+      result.className = "result mono err";
+      result.textContent = data.detail || "Something went wrong.";
       return;
     }
 
-    setBusy(true);
-    $result.textContent = "Working…";
-
-    try {
-      const payload = buildPayload(raw, operation);
-
-      let lastErr = null;
-      for (const url of API_CANDIDATES) {
-        try {
-          const { res, text, data } = await postJson(url, payload);
-          if (!res.ok) {
-            lastErr = `Tried ${url} → HTTP ${res.status}\n\n${text || "(empty)"}`;
-            continue;
-          }
-          $result.textContent = extractResult(data, text);
-          return;
-        } catch (e) {
-          lastErr = `Tried ${url} → FETCH ERROR\n\n${String(e)}`;
-        }
-      }
-
-      $result.textContent =
-        "Could not compute a result (backend sleeping, rate limited, or route mismatch).\n\n" +
-        "Tried:\n" + API_CANDIDATES.map(x => "  - " + x).join("\n") +
-        "\n\nLast error:\n" + (lastErr || "(none)");
-    } finally {
-      setBusy(false);
-    }
+    result.className = "result mono";
+    result.textContent = data.result || "(no result)";
+    renderSteps(data.steps);
+  } catch (e){
+    result.className = "result mono err";
+    result.textContent = "Couldn't reach the server. Is it running?";
   }
+}
 
-  function randInt(min, max){ return Math.floor(Math.random() * (max - min + 1)) + min; }
-  function pick(arr){ return arr[randInt(0, arr.length - 1)]; }
-  function randVar(){ return pick(["x","x","x","t","u"]); }
-  function powToken(){ return "^"; }
+$("btn-compute").addEventListener("click", compute);
+$("btn-example").addEventListener("click", () => {
+  $("expression").value = pickExample();
+  $("result").textContent = "—";
+  $("result").className = "result mono";
+  $("steps-box").innerHTML = "";
+});
 
-  function buildRandomExample(op, difficulty, allowLogs){
-    const v = randVar();
-    const p = powToken();
-    const isEasy = difficulty === "easy";
-    const isMed  = difficulty === "medium";
-    const isHard = difficulty === "hard";
+// Ctrl/Cmd+Enter to compute, because she will want it
+$("expression").addEventListener("keydown", e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") compute();
+});
 
-    const a = isEasy ? randInt(2,6) : isMed ? randInt(2,9) : randInt(2,12);
-    const b = isEasy ? randInt(1,9) : isMed ? randInt(1,12) : randInt(1,18);
-    const n = isEasy ? randInt(2,3) : isMed ? randInt(2,4) : randInt(2,6);
+// Steps only mean anything for derivatives right now; say so rather than
+// letting a silently-empty box look broken.
+$("operation").addEventListener("change", () => {
+  const stepsOnly = $("operation").value === "differentiate";
+  $("show-steps").parentElement.style.opacity = stepsOnly ? "1" : ".5";
+  $("show-steps").parentElement.title = stepsOnly
+    ? "" : "Step-by-step is only available for derivatives so far.";
+});
 
-    if (op === "simplify") {
-      if (isEasy) {
-        const k = randInt(2,6);
-        return `((${v}${p}2 - ${k}${p}2)/(${v} - ${k}))`;
-      }
-      if (Math.random() < 0.5) {
-        const power = isMed ? randInt(2,4) : randInt(3,5);
-        return `((${v}${p}${power} - 1)/(${v} - 1))`;
-      } else {
-        const k = randInt(2,8);
-        return `((${v}${p}2 - ${k}${p}2)/(${v} - ${k}))`;
-      }
-    }
-
-    if (op === "differentiate") {
-      const forms = [];
-      forms.push(`sin(${v})*${v}${p}${n}`);
-      forms.push(`${v}${p}${n} + ${a}*${v} + ${b}`);
-      forms.push(`cos(${v})*${v}${p}${randInt(1,3)}`);
-      if (!isEasy) {
-        forms.push(`exp(${v})*(${v}${p}2 + ${a}*${v})`);
-        forms.push(`(${a}*${v}+${b})${p}${randInt(2,3)}`);
-      }
-      if ((isMed || isHard) && allowLogs) {
-        forms.push(`log(${v})*${v}${p}${randInt(1,3)}`);
-      }
-      if (isHard && Math.random() < 0.35) {
-        forms.push(`(sin(${v})+${a})/(${v}${p}2)`);
-      }
-      return pick(forms);
-    }
-
-    if (op === "integrate") {
-      const forms = [];
-      forms.push(`${v}${p}${n}`);
-      forms.push(`${a}*${v}${p}${n} + ${b}*${v}`);
-      forms.push(`sin(${v})`);
-      forms.push(`cos(${v})`);
-      if (!isEasy) {
-        forms.push(`exp(${v})`);
-        forms.push(`(${a}*${v}+${b})${p}${randInt(2,3)}`);
-      }
-      if (isHard && allowLogs && Math.random() < 0.35) {
-        forms.push(`log(${v})`);
-        forms.push(`${v}*log(${v})`);
-      }
-      return pick(forms);
-    }
-
-    if (op === "limit") {
-      const forms = [];
-      forms.push(`sin(${v})/${v}, ${v}->0`);
-      if (!isEasy) {
-        forms.push(`(1 - cos(${v}))/${v}${p}2, ${v}->0`);
-        forms.push(`(exp(${v}) - 1)/${v}, ${v}->0`);
-        const k = randInt(2,8);
-        forms.push(`(${v}${p}2 - ${k}${p}2)/(${v} - ${k}), ${v}->${k}`);
-      }
-      if (isHard && Math.random() < 0.35) {
-        const k = randInt(2,8);
-        forms.push(`(${v} - ${k})/(${v}${p}2 - ${k}${p}2), ${v}->${k}`);
-        if (Math.random() < 0.35) forms.push(`1/${v}, ${v}->0+`);
-        if (Math.random() < 0.35) forms.push(`1/${v}, ${v}->0-`);
-      }
-      return pick(forms);
-    }
-
-    if (op === "solve") {
-      if (isEasy) {
-        const k = randInt(2,12);
-        const rhs = randInt(-5, 15);
-        return `${v}-${k}=${rhs}`;
-      }
-      if (Math.random() < (isHard ? 0.45 : 0.30)) {
-        const m = randInt(2, 6);
-        const add = randInt(1, 10);
-        const rhs = randInt(5, 30);
-        return `${m}*(${v}+${add})=${rhs}`;
-      } else {
-        const m = randInt(1, 8);
-        const add = randInt(-12, 12);
-        const rhs = randInt(-10, 25);
-        const left = (m === 1) ? `${v}` : `${m}*${v}`;
-        const sign = add >= 0 ? `+${add}` : `${add}`;
-        return `${left}${sign}=${rhs}`;
-      }
-    }
-
-    return `${v}+7=2`;
-  }
-
-  async function loadExample(){
-    const op = $op.value;
-    const difficulty = $diff.value;
-    const allowLogs = !!$logs.checked;
-
-    const oldText = $btnE.textContent;
-    $btnE.textContent = "Example…";
-
-    try {
-      $expr.value = buildRandomExample(op, difficulty, allowLogs);
-      await compute();
-    } finally {
-      $btnE.textContent = oldText;
-    }
-  }
-
-  function clearForModeChange(){
-    setBusy(false);
-    $expr.value = "";
-    $result.textContent = "—";
-    $expr.focus();
-  }
-
-  $op.addEventListener("change", clearForModeChange);
-  $diff.addEventListener("change", clearForModeChange);
-  $logs.addEventListener("change", clearForModeChange);
-
-  $expr.addEventListener("keydown", (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") compute();
-  });
-
-  $btnC.addEventListener("click", compute);
-  $btnE.addEventListener("click", loadExample);
-
-  $expr.focus();
-})();
+/* ---- the locker popup ---- */
+const overlay = $("giftOverlay");
+function openGift(){ overlay.classList.add("open"); overlay.setAttribute("aria-hidden","false"); }
+function closeGift(){ overlay.classList.remove("open"); overlay.setAttribute("aria-hidden","true"); }
+$("btn-gift").addEventListener("click", openGift);
+overlay.addEventListener("click", e => {
+  if (e.target === overlay || e.target.hasAttribute("data-gift-close")) closeGift();
+});
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeGift(); });
 </script>
-
 </body>
 </html>
