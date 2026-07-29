@@ -37,6 +37,9 @@ from .security import require_api_key
 LLM_URL = os.environ.get("RAVENCALC_LLM_URL", "http://localhost:9001")
 LLM_MODEL = os.environ.get("RAVENCALC_LLM_MODEL", "syosml-assistant")
 LLM_TIMEOUT = float(os.environ.get("RAVENCALC_LLM_TIMEOUT", "120"))
+# Static key, if vLLM is served with one (serve.sh --api-key / VLLM_API_KEY).
+# /health stays unauthenticated, so _llm_up() needs nothing.
+LLM_API_KEY = os.environ.get("RAVENCALC_LLM_API_KEY") or os.environ.get("VLLM_API_KEY", "")
 
 # Constrains the model to the exact vocabulary sympy_engine already accepts.
 # Without this it happily invents operations like "factor" or "expand".
@@ -105,10 +108,13 @@ def _chat(system: str, user: str, schema: Optional[dict] = None,
             "json_schema": {"name": "compute_request", "schema": schema},
         }
 
+    headers = {"Content-Type": "application/json"}
+    if LLM_API_KEY:
+        headers["Authorization"] = f"Bearer {LLM_API_KEY}"
     req = urllib.request.Request(
         f"{LLM_URL}/v1/chat/completions",
         data=json.dumps(body).encode(),
-        headers={"Content-Type": "application/json"},
+        headers=headers,
         method="POST",
     )
     # No proxy: these are loopback calls and an ambient HTTP_PROXY would send
