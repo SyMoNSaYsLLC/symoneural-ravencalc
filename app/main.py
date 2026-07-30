@@ -86,7 +86,10 @@ def _compute(payload: ComputeRequest) -> ComputeResponse:
         op = "differentiate"
 
     elif op in ("integrate", "integral"):
-        r = eng.integrate(expr, wrt=wrt, a=payload.a, b=payload.b, variables=vars_)
+        if show_steps and hasattr(eng, "integrate_steps"):
+            r = eng.integrate_steps(expr, wrt=wrt, a=payload.a, b=payload.b, variables=vars_)
+        else:
+            r = eng.integrate(expr, wrt=wrt, a=payload.a, b=payload.b, variables=vars_)
         op = "integrate"
 
     elif op == "limit":
@@ -103,10 +106,16 @@ def _compute(payload: ComputeRequest) -> ComputeResponse:
                     "limit_to is required (or use 'f(x), x->0' / 'f(x), x->0+' / 'f(x), x->0-')"
                 )
 
-        r = eng.limit(expr, wrt=wrt, limit_to=str(limit_to), dir=limit_dir, variables=vars_)
+        if show_steps and hasattr(eng, "limit_steps"):
+            r = eng.limit_steps(expr, wrt=wrt, limit_to=str(limit_to), dir=limit_dir, variables=vars_)
+        else:
+            r = eng.limit(expr, wrt=wrt, limit_to=str(limit_to), dir=limit_dir, variables=vars_)
 
     elif op == "solve":
-        r = eng.solve(expr, wrt=wrt, variables=vars_)
+        if show_steps and hasattr(eng, "solve_steps"):
+            r = eng.solve_steps(expr, wrt=wrt, variables=vars_)
+        else:
+            r = eng.solve(expr, wrt=wrt, variables=vars_)
 
     else:
         raise ValueError("Unknown operation")

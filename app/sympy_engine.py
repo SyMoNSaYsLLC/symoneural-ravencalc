@@ -185,6 +185,98 @@ def differentiate_steps(expr: str, wrt: str, n: int = 1, variables: Optional[Lis
     return EngineResult(text=str(cur), latex=sp.latex(cur), steps=steps)
 
 
+# ---------- LIGHTWEIGHT INTEGRAL STEPS ----------
+def _steps_int(e: sp.Expr, x: sp.Symbol) -> Tuple[sp.Expr, List[str]]:
+    """
+    Best-effort step generator for antiderivatives, mirroring _steps_diff.
+    Returns (antiderivative_expr, steps_list); falls back to sympy.integrate.
+    """
+    steps: List[str] = []
+
+    # constants
+    if _is_const(e, x):
+        steps.append(f"Constant rule: ∫{_pretty(e)} d{x} = {_pretty(e)}·{x}")
+        return e * x, steps
+
+    # the variable itself
+    if e == x:
+        steps.append(f"Power rule: ∫{x} d{x} = {x}**2/2")
+        return x ** 2 / 2, steps
+
+    # sum rule
+    if isinstance(e, sp.Add):
+        steps.append("Sum rule: ∫(a + b + …) = ∫a + ∫b + …")
+        parts = []
+        for term in e.args:
+            it, st = _steps_int(term, x)
+            steps.extend(st)
+            parts.append(it)
+        return sp.Add(*parts), steps
+
+    # constant multiple rule
+    if isinstance(e, sp.Mul):
+        const_factors = [f for f in e.args if _is_const(f, x)]
+        rest = [f for f in e.args if not _is_const(f, x)]
+        if const_factors and rest:
+            c = sp.Mul(*const_factors)
+            inner = sp.Mul(*rest)
+            steps.append(
+                f"Constant multiple rule: ∫{_pretty(c)}·f({x}) d{x} = {_pretty(c)}·∫f({x}) d{x}")
+            ii, st = _steps_int(inner, x)
+            steps.extend(st)
+            return c * ii, steps
+
+    # power rule x^n (and the log special case)
+    if isinstance(e, sp.Pow):
+        base, exp = e.args
+        if base == x and _is_const(exp, x):
+            if exp == sp.Integer(-1):
+                steps.append(f"Log rule: ∫1/{x} d{x} = log({x})")
+                return sp.log(x), steps
+            steps.append("Power rule: ∫x**n dx = x**(n+1)/(n+1)  (n ≠ -1)")
+            return x ** (exp + 1) / (exp + 1), steps
+
+    # standard function of the bare variable: sin, cos, exp, …
+    if isinstance(e, sp.Function) and e.args and e.args[0] == x:
+        anti = sp.integrate(e, x)
+        steps.append(
+            f"Standard integral: ∫{e.func.__name__}({x}) d{x} = {_pretty(anti)}")
+        return anti, steps
+
+    # fallback
+    steps.append("Using SymPy integrate (fallback) for this structure.")
+    return sp.integrate(e, x), steps
+
+
+def integrate_steps(expr: str, wrt: str, a: Optional[str] = None, b: Optional[str] = None, variables: Optional[List[str]] = None) -> EngineResult:
+    """
+    Integral with lightweight steps. Definite integrals narrate the
+    antiderivative rules, then apply the fundamental theorem; the RESULT
+    always comes from sympy.integrate (safe for improper bounds).
+    """
+    wrt = _norm_wrt(wrt)
+    locals_map = _symbols(variables or ([wrt] if wrt else []))
+    e = _parse_expr(expr, locals_map)
+    x = locals_map.get(wrt) if wrt in locals_map else sp.Symbol(wrt)
+
+    anti, steps = _steps_int(e, x)
+    anti = sp.simplify(anti)
+
+    definite = a is not None and b is not None and str(a).strip() and str(b).strip()
+    if definite:
+        a_e = _parse_expr(str(a), locals_map)
+        b_e = _parse_expr(str(b), locals_map)
+        steps.append(f"Antiderivative: F({x}) = {_pretty(anti)} + C")
+        steps.append(
+            f"Fundamental theorem: ∫[{_pretty(a_e)}, {_pretty(b_e)}] = F({_pretty(b_e)}) − F({_pretty(a_e)})")
+        r = sp.integrate(e, (x, a_e, b_e))
+    else:
+        steps.append("Add the constant of integration: + C")
+        r = anti
+
+    return EngineResult(text=str(r), latex=sp.latex(r), steps=steps)
+
+
 def integrate(expr: str, wrt: str, a: Optional[str] = None, b: Optional[str] = None, variables: Optional[List[str]] = None) -> EngineResult:
     wrt = _norm_wrt(wrt)
     locals_map = _symbols(variables or ([wrt] if wrt else []))
@@ -267,6 +359,71 @@ def limit(
     return EngineResult(text=str(r), latex=sp.latex(r))
 
 
+def limit_steps(
+    expr: str,
+    wrt: str,
+    limit_to: str,
+    dir: Optional[str] = None,
+    variables: Optional[List[str]] = None
+) -> EngineResult:
+    """
+    Limit with a short narrative: direct substitution when it works,
+    otherwise name the indeterminate form. The RESULT always comes from
+    sympy.limit.
+    """
+    parsed = _parse_limit_student_format(expr)
+    if parsed:
+        expr, wrt, limit_to, parsed_dir = parsed
+        if (dir or "").strip() == "":
+            dir = parsed_dir
+
+    wrt = _norm_wrt(wrt)
+    locals_map = _symbols(variables or ([wrt] if wrt else []))
+    e = _parse_expr(expr, locals_map)
+    x = locals_map.get(wrt) if wrt in locals_map else sp.Symbol(wrt)
+
+    lt_raw = str(limit_to).strip()
+    if lt_raw.endswith("+") or lt_raw.endswith("-"):
+        if (dir or "").strip() == "":
+            dir = lt_raw[-1]
+        lt_raw = lt_raw[:-1].strip()
+    t = _parse_expr(lt_raw, locals_map)
+
+    d = (dir or "").strip()
+    if d not in ("", "+", "-"):
+        d = ""
+
+    steps: List[str] = []
+    side = {"": "", "+": " from the right", "-": " from the left"}[d]
+    steps.append(f"Evaluate lim {x}→{_pretty(t)}{side} of {_pretty(e)}")
+
+    # Try direct substitution first — the honest student move.
+    try:
+        direct = e.subs(x, t)
+        if direct.has(sp.nan) or direct.has(sp.zoo):
+            num, den = sp.fraction(sp.together(e))
+            if den != 1:
+                n0, d0 = num.subs(x, t), den.subs(x, t)
+                form = f"{_pretty(n0)}/{_pretty(d0)}"
+                steps.append(
+                    f"Direct substitution gives {form} — indeterminate; "
+                    "simplify/factor or use L'Hôpital (SymPy does this exactly).")
+            else:
+                steps.append(
+                    "Direct substitution is undefined — evaluating the limit properly.")
+        elif direct.is_finite is True:
+            steps.append(f"Direct substitution works: {_pretty(direct)}")
+        else:
+            steps.append(
+                "Substitution is not finite — analysing the behaviour near the point.")
+    except Exception:
+        steps.append("Direct substitution failed — evaluating the limit properly.")
+
+    r = sp.limit(e, x, t, dir=d) if d in ("+", "-") else sp.limit(e, x, t)
+    steps.append(f"Limit: {_pretty(r)}")
+    return EngineResult(text=str(r), latex=sp.latex(r), steps=steps)
+
+
 def solve(expr: str, wrt: str, variables: Optional[List[str]] = None) -> EngineResult:
     wrt = _norm_wrt(wrt)
     locals_map = _symbols(variables or ([wrt] if wrt else []))
@@ -279,3 +436,51 @@ def solve(expr: str, wrt: str, variables: Optional[List[str]] = None) -> EngineR
     r = sp.solve(equation, x)
     text = ", ".join([str(v) for v in r]) if isinstance(r, (list, tuple)) else str(r)
     return EngineResult(text=text, latex=sp.latex(r))
+
+
+def solve_steps(expr: str, wrt: str, variables: Optional[List[str]] = None) -> EngineResult:
+    """
+    Solve with a short narrative: normalize to = 0, factor when it helps,
+    name the quadratic formula when it applies. The RESULT always comes
+    from sympy.solve.
+    """
+    wrt = _norm_wrt(wrt)
+    locals_map = _symbols(variables or ([wrt] if wrt else []))
+    if "=" in expr:
+        left, right = expr.split("=", 1)
+        lhs = _parse_expr(left, locals_map) - _parse_expr(right, locals_map)
+        equation = sp.Eq(_parse_expr(left, locals_map), _parse_expr(right, locals_map))
+    else:
+        lhs = _parse_expr(expr, locals_map)
+        equation = sp.Eq(lhs, 0)
+    x = locals_map.get(wrt) if wrt in locals_map else sp.Symbol(wrt)
+
+    steps: List[str] = [f"Rearrange to standard form: {_pretty(sp.expand(lhs))} = 0"]
+
+    poly = lhs.as_poly(x) if lhs.free_symbols else None
+    if poly is not None:
+        deg = poly.degree()
+        factored = sp.factor(lhs)
+        if factored != lhs and isinstance(factored, sp.Mul):
+            steps.append(f"Factor: {_pretty(factored)} = 0")
+            steps.append("Zero-product rule: set each factor to 0.")
+        elif deg == 2:
+            a2, b2, c2 = poly.all_coeffs() if len(poly.all_coeffs()) == 3 else (None, None, None)
+            if a2 is not None:
+                disc = sp.simplify(b2 ** 2 - 4 * a2 * c2)
+                steps.append(
+                    f"Quadratic formula with a={_pretty(a2)}, b={_pretty(b2)}, "
+                    f"c={_pretty(c2)}; discriminant = {_pretty(disc)}")
+        elif deg is not None and deg > 2:
+            steps.append(f"Degree-{deg} polynomial — solving exactly with SymPy.")
+    else:
+        steps.append("Not a polynomial in the unknown — solving exactly with SymPy.")
+
+    r = sp.solve(equation, x)
+    if isinstance(r, (list, tuple)):
+        steps.append("Solutions: " + (", ".join(str(v) for v in r) if r else "none"))
+        text = ", ".join(str(v) for v in r)
+    else:
+        steps.append(f"Solution: {r}")
+        text = str(r)
+    return EngineResult(text=text, latex=sp.latex(r), steps=steps)
