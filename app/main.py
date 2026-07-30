@@ -95,7 +95,9 @@ def _compute(payload: ComputeRequest) -> ComputeResponse:
     elif op == "limit":
         # Allow limit_to OR embedded "f(x), x->0" (and optional +/- direction)
         limit_to = payload.limit_to
-        limit_dir = (getattr(payload, "limit_dir", None) or getattr(payload, "dir", None) or "").strip()
+        # ComputeRequest has no "dir" field and pydantic drops unknown keys, so
+        # the old `or getattr(payload, "dir", None)` fallback could never fire.
+        limit_dir = (getattr(payload, "limit_dir", None) or "").strip()
 
         if limit_to is None or str(limit_to).strip() == "":
             parsed = _parse_limit_from_expression(expr)

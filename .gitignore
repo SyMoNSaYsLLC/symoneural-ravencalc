@@ -1,4 +1,3 @@
-@"
 # Python
 __pycache__/
 *.pyc
@@ -10,12 +9,16 @@ __pycache__/
 venv/
 
 # Cloudflare / secrets
+# .env holds the real RAVENCALC_API_KEY; .env.example is committed and must
+# stay blank. Credentials are matched by name rather than with a blanket
+# *.json, which silently untracked every config file and test fixture here.
 .env
+.env.*
+!.env.example
 *.pem
 *.key
-*.json
+*credentials*.json
 
 # Editor / OS
 .vscode/
 .DS_Store
-"@ | Out-File -Encoding utf8 .gitignore

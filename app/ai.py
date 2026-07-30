@@ -11,6 +11,12 @@ into a structured ComputeRequest, hands that to the existing engine, and is then
 given the *exact* result to narrate. If the model is unreachable, the endpoint
 degrades to an error rather than guessing.
 
+Because SymPy is the whole calculator, RavenCalc runs perfectly well with no
+LLM at all -- that is standalone mode (RAVENCALC_NO_AI=1, or run.sh
+--standalone). The ask routes stay mounted in that mode and answer with the
+reason the AI layer is off, which is more use than a 404. They keep returning
+HTTP 200 with ok=false, as they always have for an unreachable model.
+
 This module adds routes to the existing app rather than modifying it. main.py,
 sympy_engine.py, schemas.py, config.py, security.py and ratelimit.py are the
 byte-for-byte Christmas 2025 backend and stay that way.
@@ -35,11 +41,18 @@ from .schemas import ComputeRequest
 from .security import require_api_key
 
 LLM_URL = os.environ.get("RAVENCALC_LLM_URL", "http://localhost:9001")
-LLM_MODEL = os.environ.get("RAVENCALC_LLM_MODEL", "syosml-assistant")
+LLM_MODEL = os.environ.get("RAVENCALC_LLM_MODEL", "symon")
 LLM_TIMEOUT = float(os.environ.get("RAVENCALC_LLM_TIMEOUT", "120"))
-# Static key, if vLLM is served with one (serve.sh --api-key / VLLM_API_KEY).
-# /health stays unauthenticated, so _llm_up() needs nothing.
+# Static key, if the engine is served with one (VLLM_API_KEY). Note the
+# fallback: VLLM_API_KEY is exported from ~/.bashrc, so a service or a
+# non-login shell will not have it and this ends up empty.
 LLM_API_KEY = os.environ.get("RAVENCALC_LLM_API_KEY") or os.environ.get("VLLM_API_KEY", "")
+
+# Standalone mode: RavenCalc without the language model. SymPy is the whole
+# calculator, so /ui/compute and /api/compute are unaffected -- only the
+# natural-language front end needs the LLM. Set by run.sh --standalone/--no-ai.
+# The ask routes stay mounted and say the layer is off rather than 404ing.
+AI_DISABLED = bool(os.environ.get("RAVENCALC_NO_AI", "").strip())
 
 # Constrains the model to the exact vocabulary sympy_engine already accepts.
 # Without this it happily invents operations like "factor" or "expand".
@@ -125,32 +138,87 @@ def _chat(system: str, user: str, schema: Optional[dict] = None,
     return (payload["choices"][0]["message"].get("content") or "").strip()
 
 
-def _llm_up() -> bool:
+_MATH_STILL_WORKS = (
+    "RavenCalc's /ui/compute and /api/compute still work -- SymPy does the "
+    "maths and only natural-language input needs the model."
+)
+
+
+def _llm_probe() -> tuple[bool, str]:
+    """Is the LLM both reachable AND willing to talk to us?
+
+    Those fail differently and this used to conflate them. The old check hit
+    /health, which is unauthenticated on our engine: it returned 200 whenever
+    the process was alive, _llm_up() said True, and the real authenticated
+    call then came back 401 as a surprise. So probe a guarded route (/v1/models
+    is the cheapest) with the key we would actually send, and report which of
+    the two went wrong.
+
+    Returns (usable, detail). detail is "" when usable.
+    """
+    if AI_DISABLED:
+        return False, f"AI unavailable: standalone mode (RAVENCALC_NO_AI). {_MATH_STILL_WORKS}"
+
+    headers = {}
+    if LLM_API_KEY:
+        headers["Authorization"] = f"Bearer {LLM_API_KEY}"
+    req = urllib.request.Request(f"{LLM_URL}/v1/models", headers=headers, method="GET")
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+
     try:
-        opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
-        with opener.open(f"{LLM_URL}/health", timeout=3) as r:
-            return r.status == 200
-    except Exception:
-        return False
+        with opener.open(req, timeout=3) as r:
+            if r.status == 200:
+                return True, ""
+            return False, f"AI unavailable: {LLM_URL} answered HTTP {r.status}. {_MATH_STILL_WORKS}"
+    except urllib.error.HTTPError as exc:
+        if exc.code in (401, 403):
+            # The distinction the owner actually needs: no key at all is a
+            # config gap (VLLM_API_KEY is only in ~/.bashrc, so anything not
+            # started from a login shell has none), a rejected key is a wrong
+            # value.
+            if not LLM_API_KEY:
+                return False, (
+                    "AI unavailable: no API key. The LLM at "
+                    f"{LLM_URL} requires one -- set RAVENCALC_LLM_API_KEY in .env, "
+                    "or launch from a login shell so VLLM_API_KEY is exported. "
+                    f"{_MATH_STILL_WORKS}"
+                )
+            return False, (
+                f"AI unavailable: the LLM at {LLM_URL} rejected our API key "
+                f"(HTTP {exc.code}). Check RAVENCALC_LLM_API_KEY against the key the "
+                f"engine was started with. {_MATH_STILL_WORKS}"
+            )
+        return False, f"AI unavailable: {LLM_URL} answered HTTP {exc.code}. {_MATH_STILL_WORKS}"
+    except Exception as exc:
+        return False, (
+            f"AI unavailable: no LLM reachable at {LLM_URL} ({exc}). "
+            "Start it with: cd /home/google/AI_Local_NVIDIA && make to-llm. "
+            f"{_MATH_STILL_WORKS}"
+        )
+
+
+def _llm_up() -> bool:
+    """Kept for /ai/health's llm_up field, which predates _llm_probe()."""
+    return _llm_probe()[0]
 
 
 def _ask(payload: AskRequest) -> dict:
-    if not _llm_up():
-        return {
-            "ok": False,
-            "detail": (
-                f"No LLM at {LLM_URL}. RavenCalc's /ui/compute still works "
-                "without it -- only natural-language input needs the model. "
-                "Start it with: cd /home/google/AI_Local_NVIDIA && make to-llm"
-            ),
-        }
+    usable, detail = _llm_probe()
+    if not usable:
+        return {"ok": False, "ai_enabled": not AI_DISABLED, "detail": detail}
 
     # 1. Parse. Structured output keeps this inside the engine's vocabulary.
     try:
         raw = _chat(_PARSE_SYSTEM, payload.question, schema=_PARSE_SCHEMA, max_tokens=400)
         parsed = json.loads(raw)
+    except urllib.error.HTTPError as exc:
+        # HTTPError is a URLError subclass, so this has to come first or an
+        # auth failure gets reported as "unreachable" -- which is the same
+        # misleading answer _llm_probe() exists to avoid. The probe passed a
+        # moment ago, so landing here means the key or the engine changed.
+        return {"ok": False, "detail": f"LLM refused the request: HTTP {exc.code}. {_MATH_STILL_WORKS}"}
     except (urllib.error.URLError, TimeoutError) as exc:
-        return {"ok": False, "detail": f"LLM unreachable: {exc}"}
+        return {"ok": False, "detail": f"LLM unreachable: {exc}. {_MATH_STILL_WORKS}"}
     except json.JSONDecodeError:
         return {"ok": False, "detail": f"Could not parse the question into a request: {raw[:200]!r}"}
 
@@ -216,4 +284,14 @@ async def api_ask(req: Request, payload: AskRequest):
 
 @app.get("/ai/health")
 def ai_health():
-    return {"ok": True, "llm_url": LLM_URL, "llm_up": _llm_up(), "model": LLM_MODEL}
+    # ok/llm_url/llm_up/model are the original fields and keep their meaning;
+    # ai_enabled and detail are additions, so existing callers are unaffected.
+    usable, detail = _llm_probe()
+    return {
+        "ok": True,
+        "llm_url": LLM_URL,
+        "llm_up": usable,
+        "model": LLM_MODEL,
+        "ai_enabled": not AI_DISABLED,
+        "detail": detail or None,
+    }
