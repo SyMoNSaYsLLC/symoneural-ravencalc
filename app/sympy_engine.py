@@ -1,8 +1,15 @@
 from __future__ import annotations
+import re
 from dataclasses import dataclass
 from typing import Optional, List, Tuple
 
 import sympy as sp
+
+# An "=" that is not part of ==, >=, <= or !=.
+_PLAIN_EQUALS = re.compile(r"(?<![<>!=])=(?!=)")
+
+from .config import settings
+from .safe_parse import validate_expression
 
 
 @dataclass
@@ -25,6 +32,16 @@ def _symbols(vars: Optional[List[str]]) -> dict:
 
 
 def _parse_expr(expr: str, locals_map: dict) -> sp.Expr:
+    """The ONE place user text becomes a SymPy object.
+
+    Every engine entry point routes through here, which is why the allowlist
+    gate lives here and not in the HTTP layer: `/ui/compute` takes no
+    credential, and there is more than one caller. sympify() evals its input
+    (SymPy's own docstring says so), so an expression that has not passed
+    validate_expression() must never reach it. See app/safe_parse.py for why
+    this is an allowlist rather than a denylist.
+    """
+    validate_expression(expr, max_len=settings.max_expr_len)
     locals_map = dict(locals_map or {})
     # common constants
     locals_map.update({"pi": sp.pi, "e": sp.E})
@@ -424,14 +441,37 @@ def limit_steps(
     return EngineResult(text=str(r), latex=sp.latex(r), steps=steps)
 
 
+def _split_equation(expr: str) -> Optional[Tuple[str, str]]:
+    """Split "lhs = rhs" only on a real assignment-style equals.
+
+    A bare `"=" in expr` also fires on `>=`, `<=` and `!=`, splitting them into
+    halves that do not parse. Those are relations, not equations to rearrange.
+    """
+    if not _PLAIN_EQUALS.search(expr):
+        return None
+    left, right = _PLAIN_EQUALS.split(expr, maxsplit=1)
+    return left, right
+
+
+def _as_equation(expr: str, locals_map: dict) -> sp.Equality:
+    """Turn user text into the equation solve() should work on."""
+    halves = _split_equation(expr)
+    if halves is not None:
+        return sp.Eq(_parse_expr(halves[0], locals_map),
+                     _parse_expr(halves[1], locals_map))
+    parsed = _parse_expr(expr, locals_map)
+    # `Eq(x**2, 4)` IS already the equation. Wrapping it as Eq(<relation>, 0)
+    # asks whether a truth value equals zero, which solves to nothing at all —
+    # so `solve` on the documented `Eq(...)` form silently returned no roots.
+    if isinstance(parsed, sp.Equality):
+        return parsed
+    return sp.Eq(parsed, 0)
+
+
 def solve(expr: str, wrt: str, variables: Optional[List[str]] = None) -> EngineResult:
     wrt = _norm_wrt(wrt)
     locals_map = _symbols(variables or ([wrt] if wrt else []))
-    if "=" in expr:
-        left, right = expr.split("=", 1)
-        equation = sp.Eq(_parse_expr(left, locals_map), _parse_expr(right, locals_map))
-    else:
-        equation = sp.Eq(_parse_expr(expr, locals_map), 0)
+    equation = _as_equation(expr, locals_map)
     x = locals_map.get(wrt) if wrt in locals_map else sp.Symbol(wrt)
     r = sp.solve(equation, x)
     text = ", ".join([str(v) for v in r]) if isinstance(r, (list, tuple)) else str(r)
@@ -446,13 +486,9 @@ def solve_steps(expr: str, wrt: str, variables: Optional[List[str]] = None) -> E
     """
     wrt = _norm_wrt(wrt)
     locals_map = _symbols(variables or ([wrt] if wrt else []))
-    if "=" in expr:
-        left, right = expr.split("=", 1)
-        lhs = _parse_expr(left, locals_map) - _parse_expr(right, locals_map)
-        equation = sp.Eq(_parse_expr(left, locals_map), _parse_expr(right, locals_map))
-    else:
-        lhs = _parse_expr(expr, locals_map)
-        equation = sp.Eq(lhs, 0)
+    equation = _as_equation(expr, locals_map)
+    # The narrative rearranges to "... = 0", so lhs is the difference either way.
+    lhs = sp.together(equation.lhs - equation.rhs)
     x = locals_map.get(wrt) if wrt in locals_map else sp.Symbol(wrt)
 
     steps: List[str] = [f"Rearrange to standard form: {_pretty(sp.expand(lhs))} = 0"]
