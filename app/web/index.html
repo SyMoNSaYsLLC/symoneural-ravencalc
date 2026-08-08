@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>SyMoNeuRaL • RavenCalc 🍁</title>
+<title>SyMoNeuRaL RavenCalc</title>
 
 <meta http-equiv="Cache-Control" content="no-store, max-age=0" />
 <meta http-equiv="Pragma" content="no-cache" />
@@ -229,6 +229,37 @@ footer{text-align:center; margin-top:16px; font-size:12.5px; color:var(--muted)}
   .locker,.locker .door,.gift-reveal{animation:none}
   .locker .door{opacity:.15; transform:perspective(400px) rotateY(-105deg)}
 }
+
+/* =========================================================
+   SyMoNeuRaL family reskin (2026-08-08) — Studio design tokens,
+   green-led like the rest of the family. Appended as an override
+   layer; the back-to-school skin is preserved verbatim at
+   index.backtoschool.html (Christmas lives beside it too).
+   ========================================================= */
+:root{
+  --bg:#262624; --bg-alt:#1f1e1d;
+  --card:#2b2a27; --card2:#32302c;
+  --text:#faf9f5; --muted:#b8b2a7; --faint:#8f887b;
+  --border:#3e3b35; --radius:8px; --shadow:none;
+  --ok:#5cb270; --warn:#d3a02f; --bad:#e5695c;
+  --accent:#5cb270; --accent-dim:#3d7a4e;
+  /* legacy names still referenced by the base rules */
+  --amber:#5cb270; --rust:#3d7a4e; --gold:#5cb270; --chalk:#b8b2a7;
+}
+body{background:var(--bg); color:var(--text);}
+.leaves,.window-leaves,.gift-row{display:none !important;}
+h1{font-size:20px; font-weight:600; letter-spacing:-.3px;}
+h1 .fam{color:var(--accent);}
+p.sub{color:var(--faint); text-transform:uppercase; font-size:10px; letter-spacing:.7px;}
+select,select option,select optgroup{background-color:var(--bg) !important; color:var(--text) !important;}
+select:focus{outline:2px solid var(--accent-dim);}
+textarea,input[type=text],select{background:var(--bg); border:1px solid var(--border); border-radius:8px;}
+textarea:focus,input:focus{outline:2px solid var(--accent-dim);}
+button.primary{background:var(--accent-dim); color:var(--text); border:1px solid var(--accent);}
+button.primary:hover{filter:none; background:#48905c;}
+.card{background:var(--card); border-color:var(--border); box-shadow:none;}
+.pill{background:var(--card2);}
+.result{background:var(--bg-alt); border-color:var(--border);}
 </style>
 </head>
 
@@ -238,8 +269,8 @@ footer{text-align:center; margin-top:16px; font-size:12.5px; color:var(--muted)}
 <div class="window-leaves"></div>
 
 <div class="wrap">
-  <h1>SyMoNeuRaL • RavenCalc 🍁</h1>
-  <p class="sub">A calculus quick-checker for Raven — back to school edition.</p>
+  <h1><span class="fam">SyMoNeuRaL</span> RavenCalc</h1>
+  <p class="sub">powered by sympy + symon</p>
 
   <div class="gift-row">
     <button class="giftbtn" id="btn-gift" type="button" aria-haspopup="dialog" aria-controls="giftOverlay">

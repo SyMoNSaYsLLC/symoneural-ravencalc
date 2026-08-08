@@ -1,18 +1,21 @@
-# RavenCalc (back-to-school edition)
+# SyMoNeuRaL RavenCalc
 
-The calculus checker behind `www.symoneural.com`, wired into SyOsML the same
-way as `tools/ml/studio`: a `run.sh` that resolves relative to itself, finds a
-venv or falls back to system python, self-installs deps, and serves. Fully
-self-contained under this folder - no parent-directory references.
+The calculus checker behind `www.symoneural.com`. FastAPI + SymPy; one
+process serves the UI and the API on port 8000 (CPU only — it survives every
+GPU handoff on the box by design); a Cloudflare Tunnel puts it on the public
+host. Fully self-contained under this folder — a `run.sh` that resolves
+relative to itself, finds a venv or falls back to system python,
+self-installs deps, and serves.
 
-FastAPI + SymPy. One process serves the UI and the API on port 8000; a
-Cloudflare Tunnel puts it on the public host. The backend is the Christmas 2025
-build: `sympy_engine.py`, `schemas.py`, `config.py`, `security.py` and
-`ratelimit.py` are exactly as they shipped, and `main.py` carries two small
-deliberate fixes, both listed under "Backend changes" below. The UI
-(`app/web/index.html`) is the amber back-to-school skin with the steps checkbox
-on by default; the Christmas UI is kept beside it as
-`app/web/index.christmas.html`.
+The UI (`app/web/index.html`) wears the SyMoNeuRaL family skin — Studio's
+design tokens, green-led. The two seasonal skins are preserved beside it
+(`index.christmas.html`, `index.backtoschool.html`).
+
+**Security note (read before exposing it):** `sympy.sympify` evals its input,
+and this service once passed raw request bodies to it — a confirmed
+unauthenticated RCE, fixed by an AST allowlist gate (`app/safe_parse.py`)
+that every parse path routes through. 30+ adversarial tests pin the gate
+shut. Details in that module's docstring.
 
 ## Run it
 
@@ -138,3 +141,24 @@ through `limit_dir` and through the inline `f(x), x->0+` form.
 
 The original `.bat` launcher and PowerShell scripts are under `_windows/` and
 `scripts/`. On Linux use `run.sh`.
+
+## Limits
+
+Written plainly, on purpose.
+
+- **The expression gate is an allowlist.** Only arithmetic over numbers,
+  names, and a fixed list of mathematical functions parses. Anything else —
+  attributes, strings, subscripts, keywords, comprehensions — is refused
+  before SymPy ever sees it. If a legitimate function is missing, add it to
+  `ALLOWED_CALLS` deliberately.
+- **Very long flat sums are refused.** Python parses `a + b + c` as a chain,
+  so a ~40+-term sum trips the same depth cap that stops nesting DoS. The cap
+  cannot tell hostile nesting from a long homework polynomial; split the
+  input instead.
+- **One worker.** A pathological (but legal) SymPy computation can still take
+  seconds; the rate limiter is the only backpressure.
+- **The AI panel needs the local engine.** With symon down or the key absent
+  it degrades to `--standalone` behaviour (SymPy only), and says so rather
+  than failing.
+- **`/ui/compute` is unauthenticated by design** (it is the public product);
+  the gate + rate limit are its protection. The AI endpoints require the key.

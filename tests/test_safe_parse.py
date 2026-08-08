@@ -174,3 +174,46 @@ def test_validation_never_evaluates():
     with pytest.raises(UnsafeExpression):
         validate_expression(f"open({str(marker)!r}, 'w')")
     assert not marker.exists()
+
+
+# Added 2026-08-08 for the release pass: exotic vectors the walker refuses by
+# design. Pinned so a future refactor (say, swapping ast.walk for a visitor)
+# cannot quietly widen the gate.
+EXTRA_ATTACKS = [
+    # Python normalizes identifiers to NFKC, so a FULLWIDTH `eval` becomes the
+    # real one after parsing. The gate sees the normalized Name and refuses —
+    # exactly the class of trick a raw-text denylist can never catch.
+    pytest.param("ｅｖａｌ('1+1')", id="NFKC fullwidth eval"),
+    pytest.param("sin(x).__class__", id="attribute on a call result"),
+    pytest.param("sin(*x)", id="starred argument"),
+    pytest.param("sin(x, evaluate=1)", id="keyword argument"),
+    pytest.param("x and y", id="boolean operator"),
+    pytest.param("b'os'", id="bytes literal"),
+    pytest.param("{1, 2}", id="set literal"),
+    pytest.param("True", id="bool literal"),
+    pytest.param("x[0:2]", id="slice"),
+]
+
+
+@pytest.mark.parametrize("payload", EXTRA_ATTACKS)
+def test_exotic_vectors_are_refused(payload):
+    with pytest.raises(UnsafeExpression):
+        validate_expression(payload)
+
+
+def test_long_flat_sums_hit_the_depth_cap_by_design():
+    # There is no "wide" in Python's AST: `a + b + c` parses left-associative,
+    # so an n-term sum is an (n-1)-deep BinOp chain. A ~30-term sum passes;
+    # a 200-term one trips the same depth cap that stops nesting DoS. That is
+    # a deliberate trade (documented in the README's Limits) — the cap cannot
+    # tell hostile nesting from a very long homework polynomial.
+    validate_expression(" + ".join(["x"] * 30))  # fine
+    with pytest.raises(UnsafeExpression, match="nests too deeply"):
+        validate_expression(" + ".join(["x"] * 200))
+
+
+def test_oversized_via_default_cap_matches_config():
+    from app.config import settings
+    too_long = "x + " * settings.max_expr_len
+    with pytest.raises(UnsafeExpression, match="longer than"):
+        validate_expression(too_long, max_len=settings.max_expr_len)
